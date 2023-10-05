@@ -1,0 +1,63 @@
+title: "CAVTHY"
+lang: fr
+author:
+  - name: "Dr Philippe MICHEL"
+    affiliations:
+      name: "Hôpital NOVO"
+      department: "Unité de Soutien à la Recherche Clinique"
+format:
+ titlepage-pdf:
+  titlepage: bg-image
+  titlepage-bg-image: "novo_usrc.png"
+  logo-space-after: "0\\baselineskip"
+  documentclass: scrreprt
+  number-sections: true
+  titlepage-footer: "Dr Khaled AL TABAA \\newline Chirurgie cervico-faciale et d’ORL -- Hôpital NOVO (Site Pontoise)\\newline \\newline Chef de projet : Mme Véronique DA COSTA\\newline \\newline Étude interventionnelle multicentrique \\newline \\newline Comparer l’incidence d’hypocalcémie post thyroïdectomie totale après supplémentation pré opératoire par cholécalciférol ou non.
+ \\newline\\newline \\today"
+titlepage-theme:
+  title-fontstyle: ["Huge", "bfseries"]
+  title-color: novo
+  subtitle-color: novo
+  subtitle-fontstyle: ["huge"]
+  logo-size: "0.2\\textheight"
+  vrule-width: "0.1cm"
+  vrule-color: novo
+include-in-header:
+   text: |
+    \definecolor{novo}{HTML}{27484b}
+    \usepackage{textgreek}
+    \usepackage[locale = FR, mode = text]{siunitx}
+    \microtypecontext{kerning=french}
+    \newcommand{\pc}[1]{\qty[mode = text]{#1}{\percent}}
+    \newcommand{\mmol}[1]{\qty[mode = text]{#1}{\milli\mole\per\liter}}
+df-print : kable
+jss-pdf:
+  keep-tex: true
+pdf-engine: lualatex
+keep-tex: true
+number-sections: true
+toc: true
+lof: false
+lot: false
+mainfont: Faune
+mainfontoptions:
+  - Ligatures=TeX
+sansfont: Myriad Pro
+sansfontoptions:
+  - Ligatures=TeX
+fig-cap-location: bottom
+tbl-cap-location: top
+# classoption: [french]
+papersize: a4
+editor: source
+bibliography: stat.bib
+cite-method: biblatex
+#csl: jama.csl
+#reference-location: margin
+#citation-location: margin
+license: "MIT"
+echo: false
+warning: false
+message: false
+cache: false
+
