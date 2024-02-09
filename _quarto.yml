@@ -1,4 +1,4 @@
-title: "CAVTHY"
+title: "CAVITHY"
 lang: fr
 author:
   - name: "Dr Philippe MICHEL"
@@ -11,6 +11,7 @@ format:
   titlepage-bg-image: "novo_usrc.png"
   logo-space-after: "0\\baselineskip"
   documentclass: scrreprt
+  classoption: [fonsize = 10pt]
   number-sections: true
   titlepage-footer: "Dr Khaled AL TABAA \\newline Chirurgie cervico-faciale et d’ORL -- Hôpital NOVO (Site Pontoise)\\newline \\newline Chef de projet : Mme Véronique DA COSTA\\newline \\newline Étude interventionnelle multicentrique \\newline \\newline Comparer l’incidence d’hypocalcémie post thyroïdectomie totale après supplémentation pré opératoire par cholécalciférol ou non.
  \\newline\\newline \\today"
@@ -26,10 +27,12 @@ include-in-header:
    text: |
     \definecolor{novo}{HTML}{27484b}
     \usepackage{textgreek}
+    \usepackage{arsenal}
     \usepackage[locale = FR, mode = text]{siunitx}
     \microtypecontext{kerning=french}
     \newcommand{\pc}[1]{\qty[mode = text]{#1}{\percent}}
     \newcommand{\mmol}[1]{\qty[mode = text]{#1}{\milli\mole\per\liter}}
+    \newcommand{\chid}{test du \textchi\textsuperscript{2}}
 df-print : kable
 jss-pdf:
   keep-tex: true
@@ -39,23 +42,16 @@ number-sections: true
 toc: true
 lof: false
 lot: false
-mainfont: Faune
-mainfontoptions:
-  - Ligatures=TeX
-sansfont: Myriad Pro
-sansfontoptions:
-  - Ligatures=TeX
 fig-cap-location: bottom
 tbl-cap-location: top
-# classoption: [french]
 papersize: a4
 editor: source
 bibliography: stat.bib
 cite-method: biblatex
-#csl: jama.csl
-#reference-location: margin
-#citation-location: margin
+csl: jama.csl
 license: "MIT"
+reference-location: margin
+citation-location: margin
 echo: false
 warning: false
 message: false
