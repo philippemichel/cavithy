@@ -45,3 +45,8 @@ preliminaire/
 /.quarto/
 renv
 EI
+**/*.quarto_ipynb
+plan_cavithy.glg
+plan_cavithy.glo
+plan_cavithy.gls
+plan_cavithy.ist
