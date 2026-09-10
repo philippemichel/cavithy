@@ -1,6 +1,6 @@
 ---
-subtitle: "Plan d'analyse statistique - V3.2"
-cache: false
+subtitle: "Plan d'analyse statistique - V3.1"
+cache: true
 lof: false
 lot: false
 ---
@@ -25,12 +25,12 @@ theme_gtsummary_language(language = "fr", decimal.mark = ",")
 options(OutDec = ",")
 ```
 
-Il s'agit d'une étude interventionnelle multi-centrique. Le risque $\alpha$ retenu est de \num{0.03} pour l'analyse finale (voir le chapitre "analyse intermédiaire" [\ref{zz}]) & la puissance de \num{0.8}.
+Il s'agit d'une étude interventionnelle multi-centrique. Le risque $\alpha$ retenu est de \num{0.05} & la puissance de \num{0.8}.
 
 
-Sauf indication contraire les données numériques seront présentées par leur moyenne & écart-type si les conditions de normalité sont remplies, sinon présentées par leur médiane avec les quartiles. Les données catégorielles seront présentées par par le nombre & le pourcentage avec son intervalle de confiance calculé par bootstrap. Les proportions de données manquantes seront calculées. Les données quantitatives seront comparées à l'aide de tests t de Student ou \textsc{Anova} ou de tests non paramétriques (Wilcoxon-Mann-Withney) lorsque la distribution reste asymétrique même après transformation appropriée (échelle des puissances de Tukey). Les données qualitatives seront comparées au moyen de tests du $\chi^2$ ou de tests exacts de Fisher lorsque les groupes sont indépendants et de tests de McNemar lorsque les groupes sont appariés (mesures répétées). Les caractéristiques initiales des sujets seront décrites et comparées par centre et décrites sans comparaison par groupe de traitement. Des graphiques pourront être réalisés pour les variables ou tests importants. Les analyses multivariées seront réalisées en \gls{mixte} avec comme effet aléatoire le traitement reçu (Uvédose\textregistered{} ou placebo) & comme co-variables le type de chirurgie (avec ou sans curage) & maladie de Basedow.
+Sauf indication contraire les données numériques seront présentées par leur moyenne & écart-type si les conditions de normalité sont remplies, sinon présentées par leur médiane avec les quartiles. Les données catégorielles seront présentées par par le nombre & le pourcentage avec son intervalle de confiance calculé par bootstrap. Les proportions de données manquantes seront calculées. Les données quantitatives seront comparées à l'aide de tests t de Student ou {\textsc{Anova} ou de tests non paramétriques (Wilcoxon-Mann-Withney) lorsque la distribution reste asymétrique même après transformation appropriée (échelle des puissances de Tukey). Les données qualitatives seront comparées au moyen de tests du $\chi^2$ ou de tests exacts de Fisher lorsque les groupes sont indépendants et de tests de McNemar lorsque les groupes sont appariés (mesures répétées). Les caractéristiques initiales des sujets seront décrites et comparées par centre et décrites sans comparaison par groupe de traitement. Des graphiques pourront être réalisés pour les variables ou tests importants. Les analyses multivariées seront réalisées en \gls{mixte} avec comme effet aléatoire le traitement reçu (Uvédose\textregistered{} ou placebo)
 
-Le critère principal sera analysé selon une procédure «\gls{itt}» puis secondairement selon une procédure en «\gls{itt} modifiée» (analyse en \gls{itt} ne prenant en compte que les patients ayant été opérés). Une analyse de tolérance en per-protocole sera aussi réalisée. Vu la faiblesse prévue des effectifs Les critères secondaires ne seront analysés qu'en \gls{itt}.
+Toutes les analyses devraient être réalisées selon une procédure «\gls{itt}» puis secondairement selon une procédure en «\gls{itt} modifiée» (analyse en \gls{itt} ne prenant en compte que les patients ayant été opérés). Une analyse de tolérance en per-protocole sera aussi réalisée. Vu la faiblesse prévue des effectifs ces trois analyses ne seront pas réalisées pour tous les critères secondaires.
 
 # Calcul du nombre de cas
 
@@ -42,7 +42,7 @@ Le critère de test retenu a été la calcémie corrigée à J1. La limite basse
 \bigskip
 
 \begin{notebox}
-90 patients par groupe
+**90 patients par groupe**
 \end{notebox}
 
 
@@ -52,7 +52,7 @@ Le critère de test retenu a été la calcémie corrigée à J1. La limite basse
 
 Le décompte des données manquantes sera réalisé & présenté par un tableau voire un graphique. Les dossiers où une des données nécessaires pour l'étude du critère principal (Dosage de la calcémie à J15, présence de signes cliniques d'hypocalcémie à J15\dots) serait manquante seront exclus de l'étude après avis du promoteur. De même les variables comportant trop de données manquantes ou non utilisables ne seront pas prises en compte après accord du promoteur.
 
-Aucune imputation des données manquantes ne sera réalisée.
+Passé cette étape, les critères de jugements manquants seront imputés à l'aide d'une méthode d'\gls{mice}, celle des données continues sera effectuée selon la méthode *predictive mean matching*. Les résultats obtenus sur chaque jeu imputé seront ensuite combinés à l'aide de la règle de Rubin (package `missMDA`[@miss]).
 
 ## Corrélations anormales
 
@@ -61,12 +61,8 @@ Une analyse de corrélations (package `correlation` [@corr]) avec présentation 
 # Analyse intermédiaire
 
 Une analyse intermédiaire portant sur les 100 premiers patients ayant été observés à J15 sera réalisée sur le critère primaire [@zhu11], afin de :
-
-\begin{itemize}
-\item vérifier l’efficacité du traitement actif par rapport à la non prise du traitement ce qui permettrait le cas échéant d’arrêter plus précocement le recrutement des patients en cas d’efficacité (rejet précoce de $\mathcal{H}_{0}$). La dépense du risque $\alpha$ liée à l’analyse intermédiaire sera établie selon la méthode séquentielle groupée de Lan \& deMets, utilisant comme dépense de l’ $\alpha$ une fonction de Hwang-Shih-DeCani avec un paramètre $\gamma$ fixé à -4, approximant les règles d’arrêt d’O’Brien \& Fleming. Afin de respecter un risque global de \qty{5}{\percent} bilatéral, ou de façon équivalente de \qty{2.5}{\percent} unilatéral (supériorité), le seuil sera fixé à \num{0,003} (limite supérieure du $\mathcal{z}$ de test de la différence (témoin - expérimental) = \num{2.75}) pour l’analyse intermédiaire et à \num{0.023} (limité supérieure du $\mathcal{z}$ de test de la différence (témoin - expérimental) = \num{1.98}) pour l’analyse finale. Les calculs de la limite supérieure des dépenses supposent que l'essai peut se poursuivre si la limite inférieure est franchie soit une attitude non contraignante (« non-binding »).
-
-\item vérifier la possibilité de conclure à une inefficacité, ce qui permettrait le cas échéant d’arrêter plus précocement le recrutement en cas de futilité (rejet précoce de $\mathcal{H}_{1}$). La dépense du risque $\beta$ liée à l’analyse intermédiaire sera établie selon la méthode séquentielle groupée de Lan \& deMets, utilisant comme dépense du $\beta$ une fonction de Hwang-Shih-DeCani avec un paramètre $\gamma$ fixé à -2. Afin de respecter un risque global $\beta$ de \qty{20}{\percent} unilatéral (supériorité), le seuil sera fixé à \num{0.66} (limite inférieure du $\mathcal{z}$ de test de la différence (témoin - expérimental) = \num{0,41}) pour l’analyse intermédiaire et à \num{0.97} (limité inférieure du $\mathcal{z}$ de test de la différence (témoin - expérimental) = \num{1.98}) pour l’analyse finale\label{zz}.
-\end{itemize}
+- vérifier l’efficacité du traitement actif par rapport à la non prise du traitement ce qui permettrait le cas échéant d’arrêter plus précocement le recrutement des patients en cas d’efficacité (rejet précoce de $\mathcal{H}_{0}$). La dépense du risque alpha liée à l’analyse intermédiaire sera établie selon la méthode séquentielle groupée de Lan & deMets, utilisant comme dépense de l’alpha une fonction de Hwang-Shih-DeCani avec un paramètre gamma fixé à -4, approximant les règles d’arrêt d’O’Brien & Fleming (package `gsDesign` [@gsdesign]) . Afin de respecter un risque global de 5 % bilatéral, ou de façon équivalente de \num{2,5} % unilatéral (supériorité), le seuil sera fixé à \num00,003} (limite supérieure du z de test de la différence (témoin - expérimental) = \num{2,75}) pour l’analyse intermédiaire et à \num{0,023} (limité supérieure du z de test de la différence (témoin - expérimental) = \num{1,98}) pour l’analyse finale. Les calculs de la limite supérieure des dépenses supposent que l'essai peut se poursuivre si la limite inférieure est franchie soit une attitude non contraignante (« non-binding »).
+- vérifier la possibilité de conclure à une inefficacité, ce qui permettrait le cas échéant d’arrêter plus précocement le recrutement en cas de futilité (rejet précoce de H1). La dépense du risque beta liée à l’analyse intermédiaire sera établie selon la méthode séquentielle groupée de Lan & deMets, utilisant comme dépense du beta une fonction de Hwang-Shih-DeCani avec un paramètre gamma fixé à -2. Afin de respecter un risque global beta de 20 % unilatéral (supériorité), le seuil sera fixé à \num{0,66} (limite inférieure du z de test de la différence (témoin - expérimental) = \num{0,41}) pour l’analyse intermédiaire et à \num{0,97} (limité inférieure du z de test de la différence (témoin - expérimental) = \num{1,98}) pour l’analyse finale.
 
 Les résultats de l’analyse intermédiaire seront portés à la connaissance du Comité Indépendant de Surveillance qui pourra décider de la poursuite ou de l’interruption de l’étude.
 
@@ -92,8 +88,7 @@ Une différence de fréquence des signes cliniques d'hypocalcémie entre les deu
 
 Un lien entre les données démographiques ou pré-opératoires & la présence d'une hypocalcémie clinique ou biologique sera recherché. Une analyse multivariée sera  réalisée (\gls{mixte} -- package `lm4`[@lme4]) en incorporant comme covariables la réalisation d'un curage ganglionnaire & la maladie de Basedow.
 
-L’analyse principale sera réalisée sur tous les patients inclus. les analyses complémentaire en population \gls{itt} modifiée & en
-per-protocole seront réalisées avec le même protocole. 
+L’analyse principale sera réalisée sur tous les patients inclus. Une analyse complémentaire en population \gls{itt} modifiée sera réalisée avec le même protocole. 
 
 
 # Critères secondaires
@@ -128,7 +123,7 @@ Le critère est l'évolution du dosage de la 250HD entre le jour de l'inclusion 
 ## Critère 5
 *Les hypoparathyroïdies (PTH < 15 ng/L) seront définies par la mesure de la PTH avant l’opération, H4, J2 et J15*
 
-On comparera l'évolution du taux de PTH à l’inclusion puis J0, J2 & J15 post opératoire  par le même protocole que pour le critère 4.
+On comparera l'évolution du taux de PTH à l'inclsion puis J0, J2 & J15 post opératoire  par le même protocole que pour le critère 4.
 
 
 
