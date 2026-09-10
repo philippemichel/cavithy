@@ -20,14 +20,14 @@ nf <- c(
 )
 fe <- seq(1, 23, by = 2)
 exclus <-
-  c
-  (
-   010 1",  "010 56,  "00 14" , "01 06 ", "0 017", "0606 ", "0 038  ", "06   74",
-    02039",  "04078",  "02040"   "04086"  "02043 , "01093 "  "01052"  , "06097",  "02102",
-  "02103", "02  104", "0 6111  "
-, "
-06"
-)
+  c(
+
+    "01 11", "01 56", "0212", "010 4", "016 3", "02103",
+    "010 7", "066 9", "02104", "020 8", "060 74", "06111",
+    "02 39", "00 78", "06120", "02 40", "00 86", "06121",
+    "02 43", "00 93", "06128", "01 52", "0
+  6097"
+  )
 
 
 for (i in 1:12) {
@@ -48,15 +48,25 @@ for (i in 1:12) {
   var_label(zz) <- bn$nom
   assign(nf[i], zz)
 }
-
 #
+random <- read_ods("datas/cavithy.ods", sheet = "ranom") |>
+  mutate(
+    idcar2 = str_match(idcar, "^(\\d+)-(\\d+)-([A-Za-z]+)$") %>%
 
-save(demog, atcd, bio1, ttconsupp,
-  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visit5 visitem2, visitem
-3
-,
-  file = "datas/cavithy.R
-Da
-ta"
-)
+             {
+        sprintf("%02d-%03d-%s",  as.integer(.[, 2]) , as.int ege
+r     (.[, 3]) .[, 4])
+      }
+  ) |>
+  mutate( id = sr_sub(idcar2, 1, 6))  |>
+  dplyr::select(id,bras)
+demog <- demog |>
+  mutate(id  =  pas te(str_sub(subj id , 1 , 2), str_sub(ubjid, 3, 5), sep = "-")) |>
+  lef
+t (random, by = "id") |>
+  save(demog, atcd,   bio1, ttconc, supplem,
+    visiteJ01, visiteJ02, vi,steJ1, visiteJ2, visite  J15, visitem2, visitem3,
+
+   file = "datas/cavithy.RData"
+  )
 load("datas/cavithy.RData")

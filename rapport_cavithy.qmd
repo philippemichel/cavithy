@@ -1,5 +1,5 @@
 ---
-subtitle: "Rapport statistique V0.9"
+subtitle: "Rapport statistique V0.1"
 cache: false
 ---
 
@@ -16,7 +16,7 @@ library(kableExtra)
 library("forestmodel")
 library(labelled)
 library(epiDisplay)
-library(visdat)
+library(naniar)
 library(corrplot)
 library(biostats)
 library("colorspace")
@@ -50,6 +50,8 @@ Pour toutes les variables binaire (oui/non), seul le code "`Oui`" est présenté
 
 # Validation de la population
 
+Le fichier comportait au départ 134 patients. Après vérification, 23 patients ont été exclus car non randomisés.
+
 ## Données manquantes
 
 ```{r}
@@ -57,13 +59,7 @@ Pour toutes les variables binaire (oui/non), seul le code "`Oui`" est présenté
 #| fig-cap: missing data
 #| fig-asp: 1
 
+miss_var_summary(demog[,-1] )
 
-vis_dat(tt[,6:33],
-         sort_type = FALSE,
-          warn_large_data = FALSE) +
-  labs(title = "Missing data") +
-    theme(
-    legend.position = "bottom",
-    axis.text.x = element_text(angle = 70, vjust =0, hjust=0)
-  )
+miss_var_summary(bio1[,-1] )
 ```
