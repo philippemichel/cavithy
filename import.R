@@ -21,13 +21,24 @@ nf <- c(
 fe <- seq(1, 23, by = 2)
 exclus <-
   c(
-
-    "01 11", "01 56", "0212", "010 4", "016 3", "02103",
-    "010 7", "066 9", "02104", "020 8", "060 74", "06111",
-    "02 39", "00 78", "06120", "02 40", "00 86", "06121",
-    "02 43", "00 93", "06128", "01 52", "0
-  6097"
+    "01011","01056","02102",
+    "01014","01063","02103",
+    "01017","06069","02104",
+    "02038","06074","06111",
+    "02039","04078","06120",
+    "02040","04086","06121",
+    "02043","01093","06128",
+    "01052","06097"
   )
+ittm <- as.factor(paste0("0",c("5092","3022",
+          "1031",
+          "1024",
+          "1108",
+          "6087",
+          "3013",
+          "1020",
+          "1133")))
+pp <- as.factor(c("03022","01031"))
 
 
 for (i in 1:12) {
@@ -49,21 +60,23 @@ for (i in 1:12) {
   assign(nf[i], zz)
 }
 #
-random <- read_ods("datas/cavithy.ods", sheet = "ranom") |>
-  mutate(
-    idcar2 = str_match(idcar, "^(\\d+)-(\\d+)-([A-Za-z]+)$") %>%
+# Randomisation & critères d'analyse
+#
+random <- read_ods("datas/cavithy.ods", sheet = "random", na = "NA") |>
+  drop_na(bras)
+zz <- as_tibble(str_split_fixed(random$idcar,"-",3)) |>
+  mutate(id = replace_when(V2,
+                           str_length(V2) == 2 ~ paste0("0", V2))) |>
+  mutate(id = paste0(V1,id))
+random <- random |>
+mutate(subjid = zz$id) |>
+  mutate(across(is.character, ~ as.factor(.x))) |>
+  mutate(ittm = as.factor(ifelse(subjid %in% ittm, "no","yes"))) |>
+  mutate(pp = as.factor(ifelse(subjid %in% pp, "no","yes")))
 
-             {
-        sprintf("%02d-%03d-%s",  as.integer(.[, 2]) , as.int ege
-r     (.[, 3]) .[, 4])
-      }
-  ) |>
-  mutate( id = sr_sub(idcar2, 1, 6))  |>
-  dplyr::select(id,bras)
-demog <- demog |>
-  mutate(id  =  pas te(str_sub(subj id , 1 , 2), str_sub(ubjid, 3, 5), sep = "-")) |>
-  lef
-t (random, by = "id") |>
+tt <- left_join(random,demog, by = "subjid")
+
+#
   save(demog, atcd,   bio1, ttconc, supplem,
     visiteJ01, visiteJ02, vi,steJ1, visiteJ2, visite  J15, visitem2, visitem3,
 
