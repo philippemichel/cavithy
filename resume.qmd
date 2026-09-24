@@ -1,0 +1,171 @@
+---
+title: "Résumés"
+format: pdf
+lof: false
+lot: false
+toc: false
+---
+
+
+
+```{r}
+#| label: setup
+
+rm(list = ls())
+#
+library(gtsummary)
+library(kableExtra)
+library(labelled)
+library(baseph)
+library(tidyverse)
+#
+load("datas/cavithy.RData")
+```
+
+# Demog
+
+```{r}
+tbl_summary(demog[, -c(1,2),
+                  missing = "no"]) |>
+  modify_header(label ~ "**Variable**") |> 
+  add_n() |>
+  bold_labels() |> 
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Atcd
+
+```{r}
+atcd |>
+  select(!ends_with("autprec")) |> 
+select(!c(subjid, bras))|> 
+tbl_summary(missing = "no")|>
+  add_n() |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+
+```
+
+# bio1
+
+```{r}
+tbl_summary(bio1[, -c(1:4)],
+            missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite J01
+
+```{r}
+visiteJ01 |> 
+  select(!1:4) |> 
+  select(!ends_with("dte")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite J02
+
+```{r}
+visiteJ02 |> 
+  select(!1:7) |> 
+  select(!ends_with("dte")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite J1
+
+```{r}
+visiteJ1 |> 
+  select(!1:5) |> 
+  select(!ends_with("dte")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite J2
+
+```{r}
+visiteJ2 |> 
+  select(!1:5) |> 
+  select(!ends_with("dte")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+
+# Visite J15
+
+```{r}
+visiteJ15 |> 
+  select(!1:5) |> 
+  select(!ends_with("dte")) |>
+  select(!ends_with("hr")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite m2
+
+```{r}
+visitem2 |>  
+  select(!1:3) |> 
+  select(!ends_with("dte")) |>
+  select(!ends_with("hr")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
+
+# Visite m3
+
+```{r}
+visitem3 |>  
+  select(!1:3) |> 
+  select(!ends_with("dte")) |>
+  select(!ends_with("hr")) |>
+  select(!contains("prec")) |>
+tbl_summary(missing = "no") |>
+  modify_header(label ~ "**Variable**") |> 
+  bold_labels() |> 
+  add_n() |>
+        as_kable_extra(escape = TRUE, longtable = TRUE, booktabs = TRUE) |>
+      kable_styling(latex_options = c("scale_down", "repeat_header"))
+```
