@@ -14,7 +14,7 @@ library(tidyverse)
 # Macro import
 #
 nf <- c(
-  "demog", "atcd", "bio1", "ttconc", "supplem",
+  "demog", "atcd", "bio1", "supplem",
   "visiteJ01", "visiteJ02", "visiteJ1", "visiteJ2", "visiteJ15",
   "visitem2", "visitem3"
 )
@@ -42,7 +42,8 @@ ittm <- as.factor(paste0("0", c(
 )))
 pp <- as.factor(c("030 22", "01031"))
 
-for (i in 1:12) {
+for (i in 1:11) {
+  print(nf[i])
   f1 <- fe[i]
   f2 <- f1 + 1
   zz <- read_ods("datas/cavithy.ods",
@@ -53,10 +54,27 @@ for (i in 1:12) {
     clean_names() |>
     dplyr::filter_out(subjid %in% exclus) |>
     mutate(across(ends_with("dte"), ~ dmy(.x))) |>
-    mutate(across(is.character, ~ as.factor(.x)))
+    mutate(across(is.character, ~ as.factor(.x))) |>
+    mutate(across(
+      ends_with("on"),
+      ~ as.character(.x)
+    )) |>
+    mutate(across(
+      ends_with("on"),
+      ~ replace_na(.x, "no")
+    )) |>
+    mutate(across(is.character, ~ as.factor(.x))) |>
+    mutate(across(
+      ends_with("on"),
+      ~ fct_expand(.x, "yes")
+    ))
+  #
   bn <- read_ods("datas/cavithy.ods", sheet = f2)
   var_label(zz) <- bn$nom
   assign(nf[i], zz)
+  zz <- zz |>
+    select(!ends_with("prec")) |>
+    select(!ends_with("hr"))
 }
 #
 demog <- demog |>
@@ -65,15 +83,6 @@ demog <- demog |>
   select(!initconcat)
 bn <- read_ods("datas/cavithy.ods", sheet = 2)
 var_label(demog) <- bn$nom[1:6]
-atcd <- atcd |>
-  mutate(across(
-    ends_with("on"),
-    ~ as.character(.x)
-  )) |>
-  mutate(across(
-    ends_with("on"),
-    ~ replace_na(.x, "no")
-  ))
 #
 # Randomisation & critères d'analyse
 #
@@ -98,7 +107,6 @@ bio1 <- left_join(zz, bio1, by = "subjid")
 atcd <- left_join(zz, atcd, by = "subjid") |>
   remove_empty(which = "cols")
 supplem <- left_join(zz, supplem, by = "subjid")
-ttconc <- left_join(zz, ttconc, by = "subjid")
 visiteJ01 <- left_join(zz, visiteJ01, by = "subjid")
 visiteJ02 <- left_join(zz, visiteJ02, by = "subjid")
 visiteJ1 <- left_join(zz, visiteJ1, by = "subjid")

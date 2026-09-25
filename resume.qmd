@@ -68,7 +68,7 @@ visiteJ01 |>
   select(!1:4) |> 
   select(!ends_with("dte")) |>
   select(!contains("prec")) |>
-tbl_summary(missing = "no") |>
+tbl_summary(missing   = "no") |>
   modify_header(label ~ "**Variable**") |> 
   bold_labels() |> 
   add_n() |>
