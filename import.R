@@ -1,6 +1,8 @@
 #--------------------------------------------------
 #
 # Import CAVITHY
+# PhM
+# 28/09/2026
 #
 #--------------------------------------------------
 
@@ -8,7 +10,10 @@ library(janitor)
 library(readODS)
 library(lubridate)
 library(labelled)
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(forcats)
 #
 #
 # Macro import
@@ -49,7 +54,7 @@ for (i in 1:11) {
   zz <- read_ods("datas/cavithy.ods",
     sheet = f1,
     na = c("", " ", "NA", "D", "K", "
-  NC", "Non disponible")
+  NC", "A", "Non disponible")
   ) |>
     clean_names() |>
     dplyr::filter_out(subjid %in% exclus) |>
@@ -83,6 +88,20 @@ demog <- demog |>
   select(!initconcat)
 bn <- read_ods("datas/cavithy.ods", sheet = 2)
 var_label(demog) <- bn$nom[1:6]
+#
+atcd <- atcd |>
+  mutate(tabacon = fct_recode(tabacon,
+    "active smoking" = "Actif",
+    "quit smoking" = "Sevré",
+    "active smoking" = "yes"
+  )) |>
+  ## Réordonnancement de atcd$tabacon
+  mutate(tabacon = fct_relevel(
+    tabacon,
+    "active smoking", "quit smoking", "no"
+  ))
+#
+var_label(visiteJ01$opdebhr) <- "Heure de début d'intervention"
 #
 # Randomisation & critères d'analyse
 #

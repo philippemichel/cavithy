@@ -1,4 +1,4 @@
----
+renv::install---
 subtitle: "Rapport statistique V0.1"
 cache: false
 ---
@@ -61,7 +61,7 @@ tableaux `Antécédents`, `Suppléments` ou `Traitemens complémentaires` où se
 
 De même, lors des visites, les signes cliniques ne sont notés que
 si positifs donc il est impossible de décompter les données
-manquantes.
+manquantes : un "`no`" peut correspondre à un "non" ou à une donnée manquante. 
 
 
 ```{r}
@@ -87,8 +87,11 @@ miss_var_summary(bio1[,-c(1:2)] ) |>
 #| tbl-cap: "missing data - Visite J0-1"
 
 visiteJ01 |> 
-  select(!1:8) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:5) |> 
+  dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!autprec) |> 
+  dplyr::select(!ends_with("on")) |>
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
@@ -99,8 +102,11 @@ miss_var_summary( ) |>
 #| tbl-cap: "missing data - Visite J0-2"
 
 visiteJ02 |> 
-  select(!1:6) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:2) |> 
+  dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!autprec) |> 
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
@@ -111,8 +117,11 @@ miss_var_summary( ) |>
 #| tbl-cap: "missing data - Visite J1"
 
 visiteJ1 |> 
-  select(!1:5) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:2) |> 
+    dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!ends_with("prec")) |> 
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
@@ -123,8 +132,11 @@ miss_var_summary( ) |>
 #| tbl-cap: "missing data - Visite J2"
 
 visiteJ2 |> 
-  select(!1:5) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:2) |> 
+    dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!ends_with("prec")) |> 
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
@@ -135,20 +147,11 @@ miss_var_summary( ) |>
 #| tbl-cap: "missing data - Visite J15"
 
 visiteJ15 |> 
-  select(!1:5) |> 
-  select(!ends_with("on")) |>
-miss_var_summary( ) |> 
-  kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
-  kable_styling(latex_options = c("striped", "hold_position")) 
-```
-
-```{r}
-#| label: tbl-manqVM3
-#| tbl-cap: "missing data - Visite M3"
-
-visitem3|> 
-  select(!1:5) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:2) |> 
+    dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!ends_with("prec")) |> 
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
@@ -159,12 +162,32 @@ miss_var_summary( ) |>
 #| tbl-cap: "missing data - Visite M2"
 
 visitem2 |> 
-  select(!1:3) |> 
-  select(!ends_with("on")) |>
+  dplyr::select(!1:2) |> 
+    dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!ends_with("prec")) |> 
 miss_var_summary( ) |> 
   kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
   kable_styling(latex_options = c("striped", "hold_position")) 
 ```
+
+```{r}
+#| label: tbl-manqVM3
+#| tbl-cap: "missing data - Visite M3"
+
+visitem3|> 
+  dplyr::select(!1:2) |> 
+    dplyr::select(!ends_with("on")) |>
+    dplyr::select(!ends_with("hr")) |> 
+  dplyr::select(!ends_with("dte")) |> 
+  dplyr::select(!ends_with("prec")) |> 
+miss_var_summary( ) |> 
+  kbl(caption = "Données manquantes", booktabs = T, linesep = "") |>
+  kable_styling(latex_options = c("striped", "hold_position")) 
+```
+
+
 
 
 # Description de l'échantillon
@@ -174,7 +197,7 @@ miss_var_summary( ) |>
 #| tbl-cap: "Description de l'échantillon - Variables démographiques"
 
 demog |> 
-  select(! subjid) |> 
+  dplyr::select(! subjid) |> 
   tbl_summary(
     by = "bras",
     missing = "no",
@@ -195,7 +218,7 @@ demog |>
 #| tbl-cap: "Description de l'échantillon - Biologie pré-opératoire"
 
 bio1 |> 
-  select(bras,calcium: calciur)|> 
+  dplyr::select(bras,calcium: calciur)|> 
   tbl_summary(
     by = "bras",
      missing = "no",
@@ -217,7 +240,8 @@ bio1 |>
 #| tbl-cap: "Description de l'échantillon - Antécédents"
 
 atcd |> 
-  select(!subjid) |> 
+  dplyr::select(!subjid) |> 
+    dplyr::select(!ends_with("prec")) |> 
   tbl_summary(
     by = "bras",
      missing = "no",

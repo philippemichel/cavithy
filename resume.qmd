@@ -52,7 +52,7 @@ tbl_summary(missing = "no")|>
 # bio1
 
 ```{r}
-tbl_summary(bio1[, -c(1:4)],
+tbl_summary(bio1[,-c(1:4)],
             missing = "no") |>
   modify_header(label ~ "**Variable**") |> 
   bold_labels() |> 
@@ -67,6 +67,7 @@ tbl_summary(bio1[, -c(1:4)],
 visiteJ01 |> 
   select(!1:4) |> 
   select(!ends_with("dte")) |>
+select(!ends_with("dte")) |>
   select(!contains("prec")) |>
 tbl_summary(missing   = "no") |>
   modify_header(label ~ "**Variable**") |> 
@@ -80,8 +81,9 @@ tbl_summary(missing   = "no") |>
 
 ```{r}
 visiteJ02 |> 
-  select(!1:7) |> 
+  select(!1:3) |> 
   select(!ends_with("dte")) |>
+  select(!ends_with("hr")) |>
   select(!contains("prec")) |>
 tbl_summary(missing = "no") |>
   modify_header(label ~ "**Variable**") |> 
@@ -95,7 +97,7 @@ tbl_summary(missing = "no") |>
 
 ```{r}
 visiteJ1 |> 
-  select(!1:5) |> 
+  select(!1:3) |> 
   select(!ends_with("dte")) |>
   select(!contains("prec")) |>
 tbl_summary(missing = "no") |>
@@ -110,7 +112,7 @@ tbl_summary(missing = "no") |>
 
 ```{r}
 visiteJ2 |> 
-  select(!1:5) |> 
+  select(!1:3) |> 
   select(!ends_with("dte")) |>
   select(!contains("prec")) |>
 tbl_summary(missing = "no") |>
@@ -126,7 +128,7 @@ tbl_summary(missing = "no") |>
 
 ```{r}
 visiteJ15 |> 
-  select(!1:5) |> 
+  select(!1:3) |> 
   select(!ends_with("dte")) |>
   select(!ends_with("hr")) |>
   select(!contains("prec")) |>
