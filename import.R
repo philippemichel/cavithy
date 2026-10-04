@@ -23,19 +23,20 @@ nf <- c(
   "visiteJ01", "visiteJ02", "visiteJ1", "visiteJ2", "visiteJ15",
   "visitem2", "visitem3"
 )
+bnf <- paste0("bn", nf)
 fe <- seq(1, 23, by = 2)
 exclus <-
   c(
     "01011", "01056", "02102",
-    "01014 ", "0106 3", "02103",
-    "010 17", "06 069", "02104",
-    "0 2038", " 06074", "06111",
+    "01014", "01063", "02103",
+    "01017", "06069", "02104",
+    "02038", "06074", "06111",
     "02039", "04078", "06120",
-    "02040 ", "04086", "06121",
-    "020 43", "01093", "06128",
+    "02040", "04086", "06121",
+    "02043", "01093", "06128",
     "01052", "06097"
   )
-ittm <- as.factor(paste0("0", c(
+ittm <- as.factor(c(
   "03022",
   "01031",
   "01024",
@@ -44,8 +45,8 @@ ittm <- as.factor(paste0("0", c(
   "03013",
   "01020",
   "01133"
-)))
-pp <- as.factor(c("030 22", "01031"))
+))
+pp <- as.factor(c("03022", "01031"))
 
 for (i in 1:11) {
   print(nf[i])
@@ -75,17 +76,19 @@ for (i in 1:11) {
     ))
   #
   bn <- read_ods("datas/cavithy.ods", sheet = f2)
+  assign(bnf[i], bn$nom)
   var_label(zz) <- bn$nom
   assign(nf[i], zz)
-  zz <- zz |>
-    select(!ends_with("prec")) |>
-    select(!ends_with("hr"))
+  if (i > 4) {
+    zz <- zz |>
+      dplyr::select(!ends_with(c("p rec", "hre")))
+  }
 }
 #
 demog <- demog |>
   mutate(taille = as.numeric(as.character(taille))) |>
   mutate(pds = as.numeric(as.character(pds))) |>
-  select(!initconcat)
+  dplyr::select(!initconcat)
 bn <- read_ods("datas/cavithy.ods", sheet = 2)
 var_label(demog) <- bn$nom[1:6]
 #
@@ -120,7 +123,7 @@ random <- random |>
   mutate(pp = as.factor(ifelse(subjid %in% pp, "no", "yes")))
 
 zz <- random |>
-  select(subjid, bras)
+  dplyr::select(subjid, bras)
 demog <- left_join(zz, demog, by = "subjid")
 bio1 <- left_join(zz, bio1, by = "subjid")
 atcd <- left_join(zz, atcd, by = "subjid") |>

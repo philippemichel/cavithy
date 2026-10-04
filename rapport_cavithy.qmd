@@ -1,4 +1,4 @@
-renv::install---
+---
 subtitle: "Rapport statistique V0.1"
 cache: false
 ---
@@ -19,7 +19,7 @@ library(corrplot)
 library(biostats)
 library("colorspace")
 library("apyramid")
-library("missMDA")
+# library("missMDA")
 library("readODS")
 library("ggsci")
 library(baseph)
@@ -36,6 +36,41 @@ stt <- list(
 )
 ```
 
+```{r}
+#| label: visites
+
+# Création d'un tableau regroupant les bilologies sur les diverses visites avec calcul de la calcémie corrigée. 
+
+J00 <- visiteJ01$opdte
+J01 <- visiteJ1$visitdte - J00
+J02 <- visiteJ2$visitdte - J00
+J15 <- visiteJ15$visitedte - J00
+M3 <- visitem3$visitdte - J00
+
+bj01 <- visiteJ01 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat) |>
+  mutate(cacor = calcium - 0.025 * (album - 40)) |>
+  mutate(jj = "J01")
+bj02 <- visiteJ2 |>
+  dplyr::select(subjid, bras, calcium, albumin, phosphat) |>
+  mutate(cacor = calcium - 0.025 * (albumin - 40)) |>
+  mutate(jj = "J02")
+bj15 <- visiteJ15 |>
+  dplyr::select(subjid, bras, calcium, albumin, phosphat) |>
+  mutate(cacor = calcium - 0.025 * (albumin - 40)) |>
+  mutate(jj = "J15")
+bm3 <- visitem3 |>
+  dplyr::select(subjid, bras, calcium, albumin, phosphat) |>
+  mutate(cacor = calcium - 0.025 * (albumin - 40)) |>
+  mutate(jj = "M3")
+
+visit <- bind_rows(bj01, bj02, bj15, bm3) |>
+  mutate(jj = as.factor(jj))
+
+```
+
+
+
 \bigskip
 
 \begin{notebox}[Attention !]
@@ -43,9 +78,9 @@ Pour toutes les variables binaire (oui/non), seul le code "`Oui`" est présenté
 \end{notebox}
 
 \begin{notebox}[Langue]
-Les variables `Oui/Non` sont codés pour des raisons pratiques en `yes/no`. 
+Les variables `Oui/Non` sont codées pour des raisons pratiques en `yes/no`. 
 
-De même dans les tableaux & figures j'ai laissé les annotations & écritures anglo-saxonnes. 
+De même dans les tableaux \& figures j'ai laissé les annotations \& écritures anglo-saxonnes. 
 
 \end{notebox}
 
@@ -214,6 +249,42 @@ demog |>
 ```
 
 ```{r}
+#| label: fig-pyr
+#| fig-cap: Pyramide des âges
+demog |>
+mutate(age = cut(agec,
+  include.lowest = TRUE,
+  right = FALSE,
+  dig.lab = 3,
+  breaks = c(0, 30, 40, 50, 60, 70, 80, 100)
+)) |>
+apyramid::age_pyramid(age, sex,
+                      show_midpoint = FALSE) +
+  theme_minimal() +
+    labs(
+    title = "Pyramide des âges (patients & témoins)",
+    x = "Âge",
+  ) +
+  theme_light() +
+  scale_y_continuous(labels = c("Féminin","Masculin"), breaks = c(-10,10)) +
+  scale_fill_discrete(c("pink","lightblue")) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    legend.position = "none"
+  )
+```
+
+
+```{r}
 #| label: tbl-bio1
 #| tbl-cap: "Description de l'échantillon - Biologie pré-opératoire"
 
@@ -256,3 +327,47 @@ atcd |>
   bold_labels() |> 
   pexptabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
 ```
+
+\begin{notebox}[Qualité de l'échantillon]
+- Il n'y a pas de différence significative entre les deux bras pour les variables démographiques, biologiques et antécédents.
+
+- IL y a très peu de données manquantes
+\end{notebox}
+
+# Critère principal
+
+## Calcémie J0 vs J15
+
+```{r}
+#| label: tbl-princi-bio-1
+#| tbl-cap: "Calcémie J0 vs J15"
+
+zz <- visiteJ01 |>
+  dplyr::select(subjid, bras, calcium,album) |>
+   mutate(calciumcJ01 = calcium - 0.025 * (album - 40)) |> 
+  left_join(
+    visiteJ15 |>
+      dplyr::select(subjid, bras, calcium, albumin) |>
+         mutate(calciumcJ15 = calcium - 0.025 * (albumin - 40)),
+    by = c("subjid", "bras")
+  ) |> 
+  mutate(diff = calciumcJ15 - calciumcJ01) 
+var_label(zz$diff) <- "Différence calcémie corrigée J15 - J01"
+zz |> 
+  dplyr::select(bras,diff) |>
+  tbl_summary(
+    by = "bras",
+    missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |>
+  add_n() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Variable**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "bio1", lg = TRUE)
+```
+
