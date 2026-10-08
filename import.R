@@ -36,17 +36,16 @@ exclus <-
     "02043", "01093", "06128",
     "01052", "06097"
   )
-ittm <- as.factor(c(
-  "03022",
-  "01031",
-  "01024",
-  "01108",
-  "06087",
-  "03013",
-  "01020",
-  "01133"
+ittm <- as.factor(c("01007","01034","01050",
+            "01051","03081","01124","01062"))
+perp <-  as.factor(c("01007","01034","01050",
+                   "01051","03081","01124","01062",
+                   "05092","01024","01108","06087","03013",
+                   "01020","01133","06096",
+                   "06068","06119","06100",
+                   "01116","06073","01123","06101","06113",
+                   "06127","06112"
 ))
-pp <- as.factor(c("03022", "01031"))
 
 for (i in 1:11) {
   print(nf[i])
@@ -104,7 +103,7 @@ atcd <- atcd |>
     "active smoking", "quit smoking", "no"
   ))
 #
-var_label(visiteJ01$opdebhr) <- "Heure de début d'intervention"
+#var_label(visiteJ01$opdebhr) <- "Heure de début d'intervention"
 #
 # Randomisation & critères d'analyse
 #
@@ -139,7 +138,7 @@ visitem3 <- left_join(zz, visitem3, by = "subjid")
 rm(zz)
 #
 save(demog, atcd, bio1, supplem,
-  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3,
+  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3,ittm,perp,
   file = "datas/cavithy.RData"
 )
 load("datas/cavithy.RData")
