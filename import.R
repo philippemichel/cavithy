@@ -36,15 +36,16 @@ exclus <-
     "02043", "01093", "06128",
     "01052", "06097"
   )
-ittm <- as.factor(c("01007","01034","01050",
+itm <- as.factor(c("01007","01034","01050",
             "01051","03081","01124","01062"))
-perp <-  as.factor(c("01007","01034","01050",
-                   "01051","03081","01124","01062",
-                   "05092","01024","01108","06087","03013",
-                   "01020","01133","06096",
-                   "06068","06119","06100",
-                   "01116","06073","01123","06101","06113",
-                   "06127","06112"
+
+perp <- as.factor(c(
+  "01007", "01034", "01050", "01051",
+  "03081", "01124", "05092",
+  "01062", "01024", "01108", "06087", "03013",
+  "01020", "01133", "06096", "06068", "06119",
+  "06100", "01116", "06073", "01123", "06101",
+  "06113", "06127", "06112"
 ))
 
 for (i in 1:11) {
@@ -119,7 +120,7 @@ random <- random |>
   mutate(subjid = zz$id) |>
   mutate(across(is.character, ~ as.factor(.x))) |>
   mutate(ittm = as.factor(ifelse(subjid %in% ittm, "no", "yes"))) |>
-  mutate(pp = as.factor(ifelse(subjid %in% pp, "no", "yes")))
+  mutate(perp = as.factor(ifelse(subjid %in% perp, "no", "yes")))
 
 zz <- random |>
   dplyr::select(subjid, bras)
@@ -138,7 +139,7 @@ visitem3 <- left_join(zz, visitem3, by = "subjid")
 rm(zz)
 #
 save(demog, atcd, bio1, supplem,
-  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3,ittm,perp,
+  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3,itm,perp,
   file = "datas/cavithy.RData"
 )
 load("datas/cavithy.RData")

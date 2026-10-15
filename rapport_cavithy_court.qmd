@@ -1,0 +1,1081 @@
+---
+subtitle: "Rapport statistique V0.2h"
+cache: true
+format: 
+  html:
+    toc: true
+    code-fold: true
+---
+
+::: panel-tabset
+# Généralités
+
+\::: {.callout-note title = "Attention !"} Pour toutes les variables
+binaire (oui/non), seul le code "`Oui`" est présenté dans la plupart des
+tableaux.
+:::
+
+\::: {.callout-note title = "Langue !"} Les variables `Oui/Non` sont
+codées pour des raisons pratiques en `yes/no`.
+
+De même dans les tableaux & figures j'ai laissé les annotations &
+écritures anglo-saxonnes. 
+
+:::
+
+```{r}
+#| label: setup
+
+rm(list = ls())
+#
+library(gtsummary)
+library(kableExtra)
+library("forestmodel")
+library(labelled)
+library(epiDisplay)
+library(naniar)
+library(corrplot)
+library(biostats)
+library("colorspace")
+library("apyramid")
+ library("lme4")
+library("readODS")
+library("ggsci")
+library("baseph")
+library("plotly")
+library("tidyverse")
+  load("datas/cavithy.RData")
+expx <- FALSE
+classeur <- "cavithy_v01.ods"
+#
+ptest <- list(all_continuous() ~ "t.test", all_categorical() ~ "chisq.test")
+stt <- list(
+  all_continuous() ~ "{mean} ± {sd}",
+  all_categorical() ~ "{n}/{N} ({p}%)"
+)
+```
+
+```{r}
+#| label: macro-cac
+
+cac <- function(df){
+  df |> 
+  mutate(cac =  calcium - 0.025 * (album - 40)) |> 
+  mutate(cacl = ifelse(cac < 2.0, "low","normal")) |> 
+  mutate(cacl = as.factor(cacl))  |> 
+  mutate(hypocalc = ifelse(cacl == "low" | hypocalcon == "yes", "yes", "no")) |>   mutate(hypocalc = as.factor(hypocalc))
+}
+```
+
+```{r}
+#| label: visites
+
+# Création d'un tableau regroupant les biologies sur les diverses visites avec calcul de la calcémie corrigée. 
+
+J00 <- visiteJ01$opdte
+J01 <- visiteJ1$visitdte - J00
+J02 <- visiteJ2$visitdte - J00
+J15 <- visiteJ15$visitedte - J00
+M3 <- visitem3$visitdte - J00
+
+bj01 <- visiteJ01 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat, hypocalcon) |>
+  cac() |>
+  mutate(jj = "J0 - préop")
+bj1 <- visiteJ1 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat, hypocalcon) |>
+    cac() |>
+  mutate(jj = "J01")
+bj2 <- visiteJ2 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat, hypocalcon) |>
+    cac() |>
+  mutate(jj = "J02")
+bj15 <- visiteJ15 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat, hypocalcon) |>
+   cac() |>
+  mutate(jj = "J15")
+bm3 <- visitem3 |>
+  dplyr::select(subjid, bras, calcium, album, phosphat, hypocalcon) |>
+    cac() |>
+  mutate(jj = "M3")
+
+visit <- bind_rows(bj01, bj1, bj2,bj15, bm3) |>
+  mutate(jj = as.factor(jj))
+
+visiteJ01 <- cac(visiteJ01)
+visiteJ1 <- cac(visiteJ1)
+visiteJ2 <- cac(visiteJ2)
+visiteJ15 <- cac(visiteJ15)
+visitem3 <- cac(visitem3)
+
+```
+
+# Validation de la population
+
+Le fichier comportait au départ 134 patients. Après vérification, 23 ont
+été exclus car non randomisés soit un total utile de 111 patients.
+
+# Description de l'échantillon
+
+```{r}
+#| label: tbl-desc
+#| tbl-cap: "Description de l'échantillon - Variables démographiques"
+
+demog |> 
+  dplyr::select(! subjid) |> 
+  tbl_summary(
+    by = "bras",
+    missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |>
+  add_n() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Variable**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
+```
+
+```{r}
+#| label: fig-pyr
+#| fig-cap: Pyramide des âges
+ff <- demog |>
+mutate(age = cut(agec,
+  include.lowest = TRUE,
+  right = FALSE,
+  dig.lab = 3,
+  breaks = c(0, 30, 40, 50, 60, 70, 80, 100)
+)) |>
+apyramid::age_pyramid(age, sex,
+                      show_midpoint = FALSE) +
+    labs(
+    title = "Pyramide des âges",
+    x = "Âge",
+  ) +
+  theme_light() +
+  scale_y_continuous(labels = c("Féminin","Masculin"), breaks = c(-10,10)) +
+  scale_fill_discrete(c("pink","lightblue")) +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 12),
+    legend.position = "none"
+  )
+#
+ggplotly(ff)
+```
+
+```{r}
+#| label: tbl-bio1
+#| tbl-cap: "Description de l'échantillon - Biologie pré-opératoire"
+
+bio1 |> 
+  dplyr::select(bras,calcium: calciur)|> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |>
+  add_n() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Variable**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "bio1", lg = TRUE)
+
+```
+
+```{r}
+#| label: tbl-atcd
+#| tbl-cap: "Description de l'échantillon - Antécédents"
+
+atcd |> 
+  dplyr::select(!subjid) |> 
+    dplyr::select(!ends_with("prec")) |> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |>
+  add_overall() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Variable**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
+```
+
+\begin{notebox}[Qualité de l'échantillon]
+- Il n'y a pas de différence significative entre les deux bras pour les variables démographiques, biologiques et antécédents.
+
+- IL y a très peu de données manquantes
+\end{notebox}
+
+# Critère principal
+
+::: {.panel-tabset group="principal"}
+## en IT
+
+### Signes cliniques ou biologiques d'hypocalcémie
+
+*Le critère d’évaluation principal est la survenue d’une hypocalcémie
+sérique et/ou clinique entre la chirurgie (J0) et J15. L’hypocalcémie
+sérique est définie par un seuil de calcémie corrigée sur l’albuminémie
+inférieur à 2,00 mmol/L. L’hypocalcémie clinique est définie par
+l’apparition d’un des signes suivants: signe de Chvostek, signe de
+Trousseau, paresthésies des extrémités et péribuccales.*
+
+Aucun patient ne présente un signe clinique d'hypocalcémie avant
+l'intervention. Aucun patient n'a une hypocalcémie biologique avant
+l'intervention.
+
+```{r}
+#| label: prepa-clin
+
+zz <- visiteJ01 |>
+  dplyr::select(subjid,bras, hypocalcon: hypocalcauton, cacl, hypocalc) |>
+  mutate(Visite = "J0 - preop")
+zz1 <- visiteJ1 |>
+  dplyr::select(subjid,bras, hypocalcon: hypocalcauton, cacl, hypocalc) |>
+  mutate(Visite = "J1")
+zz2 <- visiteJ2 |>
+  dplyr::select(subjid,bras, hypocalcon: hypocalcauton, cacl, hypocalc) |>
+  mutate(Visite = "J2")
+zz15 <- visiteJ15 |>
+  dplyr::select(subjid, bras,hypocalcon: hypocalcauton, cacl, hypocalc) |>
+  mutate(Visite = "J15")
+zzm3 <- visitem3 |>
+  dplyr::select(subjid,bras, hypocalcon: hypocalcauton, cacl, hypocalc) |>
+  mutate(Visite = "M3")
+
+clin <- rbind(zz,zz1) |>
+  rbind(zz2) |>
+  rbind(zz15) |>
+  rbind(zzm3) |> 
+  mutate(Visite = as.factor(Visite))
+
+var_label(clin) <-  c(
+ "id","bras",
+"Signe clinique d'hypocalcemie",
+"Paresthésie péribuccale",
+"Paresthésie des extremites",
+"Signe de Chvostek",
+"Signe de Trousseau",
+"Crampe",
+"Trouble du rythme cardiaque",
+"Douleurs articulaires",
+"Calcémie corrigée basse",
+"Hypocalcémie clinique ou biologique",
+"Visite")
+
+
+clinp <- clin |>
+  dplyr::filter(Visite %in% c("J0 - preop","J15")) |> 
+  mutate(Visite = droplevels(Visite)) 
+  
+
+rm(zz,zz1,zz2,zz15,zzm3)
+```
+
+```{r}
+#| label: tbl-clin1
+#| tbl-cap: Signes cliniques ou biologiques à J15
+
+pp <- clinp |> 
+  dplyr::filter(Visite == "J15") |> 
+  dplyr::select(!c(subjid,Visite)) 
+
+pp |> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt
+  ) |>
+  add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Signe**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clin1", lg = TRUE)
+
+clinpt <- fisher.test(clinp$hypocalc, clinp$bras)
+pp1 <- beaup(clinpt[[1]],affp = TRUE)
+```
+
+Un test simple(hypocalcémie vs bras -- test de Fisher) ne montre pas de
+différence significative (`r pp1`) entre les deux bras.
+
+Le très faible nombre de signes cliniques rend impossible toute approche
+par un modèle mixte (ce qui était prévu dans le protocole).
+
+```{r}
+#| label: tbl-clinreg
+#| tbl-cap: Signes cliniques ou biologiques J0 vs J15 - régression
+
+  glm(hypocalc ~ bras + Visite, data = clinp, family = binomial()) |>
+  tbl_regression(
+  ) |> 
+    add_n() |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clinreg", lg = FALSE)
+```
+
+```{r}
+#| label: fig-clin2
+#| fig-cap: Signes cliniques à J15
+#| eval : false
+
+# " à revoir"
+
+pp |> 
+  mutate(across(ends_with("on"), ~ as.numeric(.x)-1)) |> 
+  dplyr::select(!hypocalcon) |>
+  pivot_longer(cols = c(parestperibon:hypocalcauton), names_to = "signe", values_to = "n") |> 
+  ggplot(aes(x = signe, y = n, fill = bras)) +
+  geom_bar(stat = "identity", position = "dodge") 
+
+```
+
+```{r}
+#| label: tbl-clintot
+#| tbl-cap: Signes cliniques sur tout le suivi
+
+pp <- clin |> 
+  dplyr::select(!c(subjid,Visite)) 
+
+pp |> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt
+  ) |>
+  add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Signe clinique**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clintot", lg = FALSE)
+```
+
+```{r}
+#| label: fig-clintot
+#| fig-cap: Signes cliniques sur tout le suivi
+#| eval: false
+
+pp |> 
+  pivot_longer(cols = c("A","B"), names_to = "bras", values_to = "n") |> 
+  ggplot(aes(x = Visite, y = n, fill = bras)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Signes cliniques sur tout le suivi",
+    x = "Visite",
+    y = "Nombre de cas"
+  ) +
+  theme_light() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    legend.position = "top"
+  )
+```
+
+\clearpage
+
+### Calcémie J0 vs J15
+
+```{r}
+#| label: tbl-princi-bio-1
+#| tbl-cap: "Calcémie J0 vs J15"
+
+zz <- visiteJ01 |>
+  dplyr::select(subjid, bras, calcium,album) |>
+   mutate(calciumcJ01 = calcium - 0.025 * (album - 40)) |> 
+  left_join(
+    visiteJ15 |>
+      dplyr::select(subjid, bras, calcium, album) |>
+         mutate(calciumcJ15 = calcium - 0.025 * (album - 40)),
+    by = c("subjid", "bras")
+  ) |> 
+  mutate(diff = calciumcJ15 - calciumcJ01) 
+var_label(zz$diff) <- "Différence calcémie corrigée J15 - préop"
+zz |> 
+  dplyr::select(bras,diff) |>
+  tbl_summary(
+    by = "bras",
+    missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |>
+  add_n() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "** **") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "bio1", lg = TRUE)
+```
+
+```{r}
+#| label: fig-princca
+#| fig-cap: "Calcémie corrigée J0 vs J15 (IT)"
+
+zzl <- zz |> 
+  dplyr::select(bras, calciumcJ01, calciumcJ15) |>
+  pivot_longer(cols = c(calciumcJ01, calciumcJ15), names_to = "Visite", values_to = "Calcémie corrigée")
+
+zzl |>
+  ggplot() +
+  aes(x = Visite, y = `Calcémie corrigée`, fill = bras) +
+  geom_boxplot() +
+    labs(
+    title = "Calcémie corrigée J0 vs J15",
+    y = "Ca corrigée (mmol/L)",
+    x = "Visite",
+  ) +
+  scale_fill_jama() +
+  scale_x_discrete(labels = c("J0", "J15")) +
+  theme_light() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    legend.position = "top"
+  )
+```
+
+```{r}
+#| label: fig-015-bland
+#| fig-cap: Évolution de la calcémie corrigée J0/J15
+
+dd <- sd(zz$diff, na.rm = TRUE)* 1.959
+ff <- zz |> 
+  ggplot() +
+  aes( x = calciumcJ01, y = diff, col = bras) +
+  geom_jitter() +
+  geom_hline(yintercept = c(0, dd, 0-dd), linetype = 4, colour = "grey") +
+  scale_y_continuous(limits = c(-0.5,0.5)) +
+      labs(
+    title = "Évolution de la calcémie corrigée J0/J15",
+    x = "Calcémie corrigée pré opératoire (mmol/L)",
+    caption = "Les lignes horizontale représente la différence nulle ± 2 écarts-types"
+  ) +
+  scale_color_jama() +
+  theme_light() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 12),
+    legend.position = "top"
+  )
+ggplotly(ff)
+```
+
+En raison du faible nombre de cas & des différences très faibles le
+calcul du modèle mixte fait apparaître une *singularité* & est donc
+impossible. on se rabat sur une régression linéaire simple.
+
+```{r}
+#| label: tbl-regca
+#| tbl-cap: "Calcémie corrigée J0 vs J15 - régression (IT)"
+
+lm(`Calcémie corrigée` ~ bras + Visite, data = zzl) |> 
+  tbl_regression(
+    tidy_fun = broom::tidy 
+  ) |> 
+    add_n() |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "regca", lg = FALSE)
+```
+
+```{r}
+#| label: fig-clin1
+#| fig-cap: Évolution de la calcémie corrigée
+
+visit |> 
+  ggplot() +
+  aes(x = jj, y = cac, fill = bras) +
+  geom_boxplot() +
+    labs(
+    title = "Calcémie corrigée J0 vs J15",
+    y = "Cacorrigée J0(mmol/L)",
+    x = "Visite",
+  ) +
+  scale_fill_jama() +
+  theme_light() +
+  theme(
+    plot.title = element_text(size = 14, face = "bold"),
+    plot.subtitle = element_text(size = 12),
+    axis.title.x = element_text(size = 12),
+    axis.title.y = element_text(
+      size = 12,
+      angle = 90,
+      vjust = .5
+    ),
+    axis.text.x = ,element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    legend.position = "top"
+  )
+  
+```
+
+## IT modifiée
+
+On ne prend en compte que les patients réellement opérés.
+
+```{r}
+#| label: prepa-itm
+
+visit2 <- visit |> 
+  dplyr::filter(!(subjid %in%itm)) 
+
+clinp2 <- clinp |> 
+  dplyr::filter(!(subjid %in%itm))
+
+llc <- nrow(clinp2)/2
+
+clinpt <- fisher.test(clinp2$hypocalc, clinp2$bras)
+pp1 <- beaup(clinpt[[1]],affp = TRUE)
+```
+
+On ne prend en compte que les patients réellement opérés soit `r llc`
+cas. Sur cet échantillon le lien entre le bras & la présence de signe
+clinique ou biologique d'hypocalcémie à J15 n'est toujours pas
+significatif (`r pp1`).
+
+```{r}
+#| label: tbl-clin1-itm
+#| tbl-cap: Signes cliniques ou biologiques à J15 -(ITm)
+
+pp <- clinp2 |> 
+  dplyr::filter(Visite == "J15") |> 
+  dplyr::select(!c(subjid,Visite)) 
+
+pp |> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt
+  ) |>
+  add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Signe**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clin1", lg = TRUE)
+
+
+```
+
+```{r}
+#| label: tbl-clinreg-itm
+#| tbl-cap: Signes cliniques ou biologiques J0 vs J15 - régression (ITm)
+   
+  glm(hypocalc ~ bras + Visite, data = clinp2, family = binomial()) |>
+  tbl_regression(
+  ) |> 
+    add_n() |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clinreg", lg = FALSE)
+```
+
+```{r}
+#| label: fig-clin2-itm
+#| fig-cap: Signes cliniques à J15 (ITm)
+#| eval : false
+
+# " à revoir"
+
+pp |> 
+  mutate(across(ends_with("on"), ~ as.numeric(.x)-1)) |> 
+  dplyr::select(!hypocalcon) |>
+  pivot_longer(cols = c(parestperibon:hypocalcauton), names_to = "signe", values_to = "n") |> 
+  ggplot(aes(x = signe, y = n, fill = bras)) +
+  geom_bar(stat = "identity", position = "dodge") 
+
+```
+
+## Per protocole
+
+```{r}
+#| label: prepa-perp
+
+visit3 <- visit |> 
+  dplyr::filter(!(subjid %in%perp)) 
+
+clinp3 <- clinp |> 
+  dplyr::filter(!(subjid %in%perp))
+
+llc <- nrow(clinp3)/2
+
+clinpt <- fisher.test(clinp3$hypocalc, clinp3$bras)
+pp1 <- beaup(clinpt[[1]],affp = TRUE)
+```
+
+On ne prend en compte que les patients *per protocol* soit `r llc` cas.
+Sur cet échantillon le lien entre le bras & la présence de signe
+clinique ou biologique d'hypocalcémie à J15 n'est toujours pas
+significatif (`r pp1`).
+
+```{r}
+#| label: tbl-clin1-perp
+#| tbl-cap: Signes cliniques ou biologiques à J15 -(Per protocol)
+
+pp <- clinp3 |> 
+  dplyr::filter(Visite == "J15") |> 
+  dplyr::select(!c(subjid,Visite)) 
+
+pp |> 
+  tbl_summary(
+    by = "bras",
+     missing = "no",
+    statistic = stt
+  ) |>
+  add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Signe**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clin1", lg = TRUE)
+
+
+```
+
+```{r}
+#| label: tbl-clinreg-perp
+#| tbl-cap: Signes cliniques ou biologiques J0 vs J15 - régression (Per protocol)
+   
+  glm(hypocalc ~ bras + Visite, data = clinp3, family = binomial()) |>
+  tbl_regression(
+  ) |> 
+    add_n() |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clinreg", lg = FALSE)
+```
+
+```{r}
+#| label: fig-clin2-perp
+#| fig-cap: Signes cliniques à J15 (Per protocol)
+#| eval : false
+
+# " à revoir"
+
+pp |> 
+  mutate(across(ends_with("on"), ~ as.numeric(.x)-1)) |> 
+  dplyr::select(!hypocalcon) |>
+  pivot_longer(cols = c(parestperibon:hypocalcauton), names_to = "signe", values_to = "n") |> 
+  ggplot(aes(x = signe, y = n, fill = bras)) +
+  geom_bar(stat = "identity", position = "dodge") 
+
+```
+:::
+
+# Critères secondaires
+
+::: {.panel-tabset group="language"}
+## Critère 1
+
+*Durée de l’hospitalisation initiale, recueil des évènements
+indésirables et des ré-hospitalisations.*
+
+### Durée de l’hospitalisation initiale
+
+```{r}
+#| label: tbl-dureehosp
+#| tbl-cap: Length of initial hospital stay
+
+visiteJ01 |>
+  dplyr::select(subjid, bras, opdte) |>
+  left_join(
+    visiteJ15 |>
+      dplyr::select(subjid, finhospitdte),
+    by = c("subjid")
+  ) |> 
+  mutate('Length of initial hospital stay' = as.numeric(finhospitdte - opdte)) |> 
+  dplyr::select(bras, 'Length of initial hospital stay') |>
+  tbl_summary(
+    by = "bras",
+    missing = "no",
+    statistic = stt,
+    digits = all_continuous() ~ 1
+  ) |> 
+    add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "dureehosp", lg = TRUE)
+
+
+```
+
+### Évènements indésirables
+
+```{r}
+#| label: import-ei
+
+ei <- read_ods("datas/ei.ods") |> 
+  drop_na(EINAT) |> 
+  mutate(across(everything(), ~ as.factor(.x))) 
+bn <- read_ods("datas/ei.ods", sheet = 2) 
+var_label(ei) <- bn$nom
+rr <- demog |> 
+  dplyr::select(subjid, bras)
+ei <- ei |> 
+  left_join(rr, by = "subjid")
+```
+
+```{r}
+#| label: tbl-ei1
+#| tbl-cap: Adverse events
+
+
+ei |> 
+  dplyr::select(EINAT) |> 
+  tbl_summary(sort = all_categorical(FALSE) ~ "frequency",
+              missing = "no") |> 
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "ei1", lg = TRUE)
+```
+
+```{r}
+#| label: tbl-ei2
+#| tbl-cap: Adverse events  - Evolution
+
+
+ei |> 
+  dplyr::select(EIINTENS,EIACT, EICRSON, EICAUSAL, EICAUSAUT,
+                EICAUSEAUTNA,EIEVOL) |> 
+  tbl_summary(sort = all_categorical(FALSE) ~ "frequency",
+              missing = "no") |> 
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "ei2", lg = TRUE)
+```
+
+### Ré-hospitalisations
+
+Aucune réhospitalisation n'a été notée.
+
+## Critère 2
+
+*Sévérité de l’hypocalcémie définie par une calcémie corrigée sur
+l’albuminémie inférieure à 1,90 mmol/L mesurée à J1, J2 et J15 et/ ou
+l’utilisation de gluconate de calcium IV dans les 15 premiers jours post
+opératoires.*
+
+```{r}
+#| label: tbl-hypoca
+#| tbl-cap: "Severity of hypocalcemia"
+
+zz <- clin |> 
+  dplyr::filter(Visite %in% c("J1","J2","J15")) |> 
+  mutate(Visite = droplevels(Visite)) |>
+  dplyr::select(subjid, bras, Visite, hypocalc)  |> 
+  pivot_wider(names_from = Visite, values_from = hypocalc) |> 
+ mutate(hypocalc = ifelse(J1 == "yes" | J2 == "yes" | J15 == "yes", "yes", "no")) 
+sup <- supplem |> 
+  mutate(gluc = if_else(suppltrt == "Gluconate de calcium", "yes", "no", missing = "no")) |>
+  dplyr::select(subjid, suppltrt, gluc) 
+zz <- zz |> 
+  left_join(sup, by = "subjid") |> 
+  mutate(hypog = as.factor(ifelse(hypocalc == "yes" |gluc == "yes", "yes", "no"))) |> 
+  dplyr::select(bras, hypocalc, gluc,hypog) 
+var_label(zz) = c("bras", "Ca corrigée < 1.9 mmol/L", "Gluconate de calcium IV", "Hypocalcémie sévère")
+zz |> 
+ tbl_summary(by = "bras", 
+              missing = "no") |> 
+    add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "hypoca", lg = TRUE)
+```
+
+## Critère 3
+
+*Durée des symptômes de l’hypocalcémie dans les 15 premiers jours post
+opératoires.*
+
+```{r}
+#| label: tbl-duree
+#| tbl-cap: "Duration of symptoms of hypocalcaemia"
+
+zz <- visit |> 
+  dplyr::filter(jj %in% c("J01","J02","J15")) |> 
+  mutate(jj = droplevels(jj)) |>
+  dplyr::select(subjid, bras, jj, hypocalc)  |> 
+  pivot_wider(names_from = jj, values_from = hypocalc) |> 
+ mutate(duree = as.factor(ifelse(J01 == "yes" & J02 == "yes" & J15 == "yes", "15",
+                       ifelse(J01 == "yes" & J02 == "yes" & J15 == "no", "2",
+                              ifelse(J01 == "yes" & J02 == "no" & J15 == "no", "1",
+                                     ifelse(J01 == "no" & J02 == "no" & J15 == "no", "0", NA)))))) |> 
+mutate(duree = fct_relevel(duree,
+    "0", "1", "2", "15")) |> 
+  dplyr::select(bras, duree) 
+
+var_label(zz) = c("bras", "Duration of symptoms of hypocalcaemia")
+zz |>
+  tbl_summary(by = "bras", 
+              missing = "no") |> 
+    add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "** **") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "duree", lg = TRUE)
+
+```
+
+## Critère 4
+
+*La carence en vitamine D sera mesurée par dosage de la 25OHD en
+comparant la valeur initiale à la visite d’inclusion à celle du jour de
+l’opération (J0-H0).*
+
+```{r}
+#| label: tbl-vitd
+#| tbl-cap: vitamin D deficiency
+
+zz <- bio1 |> 
+  dplyr::select(subjid, bras, ohd) |>
+  left_join(
+    visiteJ01 |>
+      dplyr::select(subjid, ohd),
+    by = c("subjid")
+  )
+var_label(zz) <- c("id","bras","25OHD inclusion","25OHD preoperative")
+zz |>
+  dplyr::select(! subjid) |>
+  tbl_summary(by = "bras", 
+              missing = "no") |> 
+    add_overall() |>
+  add_p() |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "** **") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "vitd", lg = TRUE)
+
+```
+
+## Critère 5
+
+*Recueil des pathologies à risque et mesure de la calcémie.*
+
+
+On distingue les indications de thyroïdectomie en : 
+
+- Nodule
+- Cancer
+- Maladie de Basedow
+- Autre
+
+```{r}
+#| label: tbl-diag2
+#| tbl-cap: Serum calcium according to the diagnosis
+
+aa <- atcd |> 
+    mutate(
+    Diagnostic = case_when(
+     nodtoxon =="yes" ~ "Nodule",
+     basedowon =="yes" ~ "Basedow disease",
+     cancerthyron =="yes" ~ "Cancer",
+      TRUE ~ "Other"
+    )
+  ) |> 
+  dplyr::select(subjid, bras, Diagnostic) |> 
+  mutate(Diagnostic = fct_relevel(Diagnostic,
+                                  "Other", "Basedow disease", "Nodule", "Cancer"))
+
+zcac <-  bj01 |> 
+  dplyr::select(subjid, cac) |>
+    left_join(
+    bj1 |>
+      dplyr::select(subjid, cac),
+    by = c("subjid" )
+  ) |> 
+  left_join(
+    bj2 |>
+      dplyr::select(subjid, cac),
+    by = c("subjid" )
+  ) |> 
+    left_join(
+    bj15 |>
+      dplyr::select(subjid, cac),
+    by = c("subjid" )
+  ) |> 
+    left_join(
+    bm3 |>
+      dplyr::select(subjid, cac),
+    by = c("subjid" )
+  )
+names(zcac) <- c("subjid", "preop", "d1", "d2", "d15", "M3")
+zz <- aa |> 
+  left_join(zcac, by = c("subjid")) |> 
+  pivot_longer(cols = c(preop, d1, d2, d15, M3), names_to = "Visite", values_to = "cacl") |> 
+  mutate(Visite = factor(Visite, levels = c("preop", "d1", "d2", "d15", "M3"))) 
+
+zz |> 
+  dplyr::select(! c(subjid, bras)) |>
+  tbl_summary(by = "Diagnostic", 
+              missing = "no") |> 
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "diag2", lg = FALSE)
+```
+
+```{r}
+#| label: tbl-regdiag
+#| tbl-cap: Serum calcium according to the diagnosis -regression
+
+ll <- lmerTest::lmer(cacl ~ bras + Diagnostic + Visite + (1|subjid), data = zz) 
+
+ll |> 
+  tbl_regression() |> 
+  bold_p(t = 0.03) |>
+   bold_labels() |> 
+    pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "regdiag", lg = FALSE)
+```
+
+
+
+## Critère 6
+
+*Nombre d’hypocalcémies définitives.*
+
+Une hypocalcémie définitive se défini comme une calcémie corrigée
+inférieure à 1.9 mmol/L ou l'existence de signes cliniques à trois mois.
+
+```{r}
+#| label: tbl-hypodef
+#| tbl-cap: definitive hypocalcaemia
+clin |> 
+  dplyr::select(Visite,hypocalc, hypocalcon, cacl) |> 
+  tbl_summary(by = Visite, 
+              missing = "no") |> 
+  modify_header(label = " ") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "sec-hypom3", lg = FALSE)
+```
+
+## Critère 7
+
+*L’activité parathyroïdienne sera évaluée par la mesure de la PTH avant l’opération (J0-Chirurgie), à H4, J2 et J15. L’hypoparathyroïdie étant définie par la PTH < 15 ng/L.*
+
+```{r}
+#| label: tbl-pth
+#| tbl-cap: Serum parathyroid hormone (PTH) levels
+
+visiteJ01 |> 
+  dplyr::select(subjid, bras, pth) |>
+  rename(preop = pth) |>
+  left_join(
+    visiteJ02 |>
+      dplyr::select(subjid, pth) |> 
+    rename(H4 = pth),
+    by = c("subjid")
+  ) |> 
+    left_join(
+    visiteJ2 |>
+      dplyr::select(subjid, pth) |> 
+    rename(d2 = pth),
+    by = c("subjid")
+  ) |> 
+  left_join(
+    visiteJ15 |>
+      dplyr::select(subjid, pth) |> 
+    rename(d15 = pth),
+    by = c("subjid")
+  ) |> 
+  pivot_longer(cols = c(preop, H4, d2, d15), names_to = "Visite", values_to = "pth") |> 
+  mutate("Low PTH" = as.factor(ifelse(pth < 15, "Low", "Normal"))) |>
+  dplyr::select(bras, Visite, pth, "Low PTH") |> 
+  tbl_summary(by = "bras", 
+              missing = "no") |>
+  add_n() |>
+  add_p(test = ptest) |>
+  bold_p(t = 0.03) |>
+  modify_header(label = "**Variable**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet = "pth", lg = TRUE)
+
+```
+
+
+
+
+:::
+
+:::
