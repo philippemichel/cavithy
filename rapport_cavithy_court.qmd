@@ -1,5 +1,5 @@
 ---
-subtitle: "Rapport statistique V0.2h"
+subtitle: "Rapport statistique V0.5"
 cache: true
 format: 
   html:
@@ -10,17 +10,16 @@ format:
 ::: panel-tabset
 # Généralités
 
-\::: {.callout-note title = "Attention !"} Pour toutes les variables
-binaire (oui/non), seul le code "`Oui`" est présenté dans la plupart des
-tableaux.
-:::
+::: {.callout-note title = "Attention !"}
 
-\::: {.callout-note title = "Langue !"} Les variables `Oui/Non` sont
-codées pour des raisons pratiques en `yes/no`.
+Pour toutes les variables binaire (oui/non), seul le code "`Oui`" est
+présenté dans la plupart des tableaux.
+
+Les variables `Oui/Non` sont codées pour des raisons pratiques en
+`yes/no`.
 
 De même dans les tableaux & figures j'ai laissé les annotations &
-écritures anglo-saxonnes. 
-
+écritures anglo-saxonnes.
 :::
 
 ```{r}
@@ -219,11 +218,36 @@ atcd |>
   pexptabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
 ```
 
-\begin{notebox}[Qualité de l'échantillon]
-- Il n'y a pas de différence significative entre les deux bras pour les variables démographiques, biologiques et antécédents.
+```{r}
+#| label: tbl-techop
+#| tbl-cap: Surgical technique
 
-- IL y a très peu de données manquantes
-\end{notebox}
+
+op <- visiteJ02 |>
+  dplyr::select(subjid,parathy,curz6,adenomon) |>
+  left_join(demog |> 
+              dplyr::select(subjid, bras), by = "subjid") |>
+  dplyr::select(subjid:bras)
+
+op |>
+  dplyr::select(!c(subjid)) |>
+  tbl_summary(by= bras,
+              missing = "no") |>
+  add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  add_ci() |>
+  modify_header(label = "**Signe**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |>
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+              "techop", lg = TRUE)
+
+```
+
+- Il n'y a pas de différence significative entre les deux bras pour les variables démographiques, biologiques et antécédents ou les données opératoires.
+- Il y a très peu de données manquantes 
+
 
 # Critère principal
 
@@ -289,7 +313,26 @@ clinp <- clin |>
   
 
 rm(zz,zz1,zz2,zz15,zzm3)
+
+diag <- atcd |> 
+    mutate(
+    Diagnostic = case_when(
+     nodtoxon =="yes" ~ "Nodule",
+     basedowon =="yes" ~ "Basedow disease",
+     cancerthyron =="yes" ~ "Cancer",
+      TRUE ~ "Other"
+    )
+  ) |> 
+  dplyr::select(subjid, Diagnostic) |> 
+  mutate(Diagnostic = fct_relevel(Diagnostic,
+                                  "Other", "Basedow disease", "Nodule", "Cancer"))
+
+clinp <- clinp |> 
+  left_join(diag, by = "subjid") 
 ```
+
+Il n'y a pas de différence entre les populations des deux bras pour les
+critères étudiés.
 
 ```{r}
 #| label: tbl-clin1
@@ -300,6 +343,7 @@ pp <- clinp |>
   dplyr::select(!c(subjid,Visite)) 
 
 pp |> 
+  dplyr::select(!c(Diagnostic)) |> 
   tbl_summary(
     by = "bras",
      missing = "no",
@@ -308,6 +352,7 @@ pp |>
   add_overall() |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
+  add_ci() |> 
   modify_header(label = "**Signe**") |>
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
   bold_labels() |> 
@@ -319,16 +364,19 @@ pp1 <- beaup(clinpt[[1]],affp = TRUE)
 ```
 
 Un test simple(hypocalcémie vs bras -- test de Fisher) ne montre pas de
-différence significative (`r pp1`) entre les deux bras.
+différence significative (`r pp1`) entre les deux bras. À J15 il n'y a
+aucune différence entre les deux bras pour la présence d'un signe
+clinique ou d'une hypocalcémie biologique.
 
 Le très faible nombre de signes cliniques rend impossible toute approche
-par un modèle mixte (ce qui était prévu dans le protocole).
+par un modèle mixte (ce qui était prévu dans le protocole). On se rabat
+donc sur une régression logistique.
 
 ```{r}
 #| label: tbl-clinreg
 #| tbl-cap: Signes cliniques ou biologiques J0 vs J15 - régression
 
-  glm(hypocalc ~ bras + Visite, data = clinp, family = binomial()) |>
+  glm(hypocalc ~ bras + Visite + Diagnostic, data = clinp, family = binomial()) |>
   tbl_regression(
   ) |> 
     add_n() |>
@@ -356,6 +404,28 @@ pp |>
 ```
 
 ```{r}
+#| label: tbl-clindiag
+#| tbl-cap: Clinical or biological hypocalcemia on day 15 vs diagnosis
+
+pp |> 
+  dplyr::select(hypocalc, Diagnostic) |>
+  tbl_summary(
+    by = "Diagnostic",
+     missing = "no" ) |> 
+    add_overall() |>
+  add_p(test = everything() ~ "fisher.test") |>
+  bold_p(t = 0.03) |>
+  add_ci() |> 
+  modify_header(label = "**Signe**") |>
+  modify_spanning_header(c("stat_1", "stat_2", "stat_3", , "stat_4") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "clindiag", lg = TRUE)
+```
+
+### Tout le suivi
+
+```{r}
 #| label: tbl-clintot
 #| tbl-cap: Signes cliniques sur tout le suivi
 
@@ -371,6 +441,7 @@ pp |>
   add_overall() |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
+  add_ci() |>
   modify_header(label = "**Signe clinique**") |>
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
   bold_labels() |> 
@@ -415,7 +486,7 @@ pp |>
 ```{r}
 #| label: tbl-princi-bio-1
 #| tbl-cap: "Calcémie J0 vs J15"
-
+#| eval: true
 zz <- visiteJ01 |>
   dplyr::select(subjid, bras, calcium,album) |>
    mutate(calciumcJ01 = calcium - 0.025 * (album - 40)) |> 
@@ -427,22 +498,22 @@ zz <- visiteJ01 |>
   ) |> 
   mutate(diff = calciumcJ15 - calciumcJ01) 
 var_label(zz$diff) <- "Différence calcémie corrigée J15 - préop"
-zz |> 
-  dplyr::select(bras,diff) |>
-  tbl_summary(
-    by = "bras",
-    missing = "no",
-    statistic = stt,
-    digits = all_continuous() ~ 1
-  ) |>
-  add_n() |>
-  add_p(test = ptest) |>
-  bold_p(t = 0.03) |>
-  modify_header(label = "** **") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
-  bold_labels() |> 
-  pexptabph(exp = expx, nomfich = classeur , nomsheet =
-  "bio1", lg = TRUE)
+# zz |> 
+#   dplyr::select(bras,diff) |>
+#   tbl_summary(
+#     by = "bras",
+#     missing = "no",
+#     statistic = stt,
+#     digits = all_continuous() ~ 1
+#   ) |>
+#   add_n() |>
+#   add_p(test = ptest) |>
+#   bold_p(t = 0.03) |>
+#   modify_header(label = "** **") |>
+#   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+#   bold_labels() |> 
+#   pexptabph(exp = expx, nomfich = classeur , nomsheet =
+#   "bio1", lg = TRUE)
 ```
 
 ```{r}
@@ -534,6 +605,8 @@ lm(`Calcémie corrigée` ~ bras + Visite, data = zzl) |>
   "regca", lg = FALSE)
 ```
 
+Pas de différence visible entre les deux bras.
+
 ```{r}
 #| label: fig-clin1
 #| fig-cap: Évolution de la calcémie corrigée
@@ -565,9 +638,11 @@ visit |>
   
 ```
 
-## IT modifiée
+On observe une baisse (très fa)ble de la calcémie corrigée à J1 & J2
+mais qui se corrige rapidement. À partir de J15 la calcémie corrigée est
+identique à la valeur préopératoire.
 
-On ne prend en compte que les patients réellement opérés.
+## IT modifiée
 
 ```{r}
 #| label: prepa-itm
@@ -606,6 +681,7 @@ pp |>
   add_overall() |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
+  add_ci() |>
   modify_header(label = "**Signe**") |>
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
   bold_labels() |> 
@@ -685,6 +761,7 @@ pp |>
   add_overall() |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
+  add_ci() |> 
   modify_header(label = "**Signe**") |>
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
   bold_labels() |> 
@@ -728,7 +805,7 @@ pp |>
 
 # Critères secondaires
 
-::: {.panel-tabset group="language"}
+::: {.panel-tabset group="secondaires"}
 ## Critère 1
 
 *Durée de l’hospitalisation initiale, recueil des évènements
@@ -747,8 +824,8 @@ visiteJ01 |>
       dplyr::select(subjid, finhospitdte),
     by = c("subjid")
   ) |> 
-  mutate('Length of initial hospital stay' = as.numeric(finhospitdte - opdte)) |> 
-  dplyr::select(bras, 'Length of initial hospital stay') |>
+  mutate('Length of initial hospital stay (days)' = as.numeric(finhospitdte - opdte)) |>  
+  dplyr::select(bras, 'Length of initial hospital stay (days)') |>
   tbl_summary(
     by = "bras",
     missing = "no",
@@ -763,9 +840,10 @@ visiteJ01 |>
   bold_labels() |> 
   pexptabph(exp = expx, nomfich = classeur , nomsheet =
   "dureehosp", lg = TRUE)
-
-
 ```
+
+Pas de différence significative entre les deux bras pour la durée
+d'hospitalisation initiale.
 
 ### Évènements indésirables
 
@@ -789,8 +867,9 @@ ei <- ei |>
 
 
 ei |> 
-  dplyr::select(EINAT) |> 
+  dplyr::select(EINAT, bras) |> 
   tbl_summary(sort = all_categorical(FALSE) ~ "frequency",
+              by = bras,
               missing = "no") |> 
   modify_header(label = " ") |>
   bold_labels() |> 
@@ -798,15 +877,19 @@ ei |>
   "ei1", lg = TRUE)
 ```
 
+Le faible nombre de cas pour chaque effet indésirable rend impossible
+une analyse statistique. On se limite donc à une description de
+l'évolution des effets indésirables.
+
 ```{r}
 #| label: tbl-ei2
 #| tbl-cap: Adverse events  - Evolution
 
 
 ei |> 
-  dplyr::select(EIINTENS,EIACT, EICRSON, EICAUSAL, EICAUSAUT,
-                EICAUSEAUTNA,EIEVOL) |> 
+  dplyr::select(EIINTENS,EIACT, EICRSON, EICAUSAL, EICAUSAUT, EICAUSEAUTNA,EIEVOL, bras) |> 
   tbl_summary(sort = all_categorical(FALSE) ~ "frequency",
+              by = bras,
               missing = "no") |> 
   modify_header(label = " ") |>
   bold_labels() |> 
@@ -825,9 +908,11 @@ l’albuminémie inférieure à 1,90 mmol/L mesurée à J1, J2 et J15 et/ ou
 l’utilisation de gluconate de calcium IV dans les 15 premiers jours post
 opératoires.*
 
+On considère comme ayant eu une hypocalcémie grave tout patient ayant eu
+sur au moins une visite un des signes retenus.
+
 ```{r}
-#| label: tbl-hypoca
-#| tbl-cap: "Severity of hypocalcemia"
+#| label: prepa-hypoca
 
 zz <- clin |> 
   dplyr::filter(Visite %in% c("J1","J2","J15")) |> 
@@ -835,19 +920,35 @@ zz <- clin |>
   dplyr::select(subjid, bras, Visite, hypocalc)  |> 
   pivot_wider(names_from = Visite, values_from = hypocalc) |> 
  mutate(hypocalc = ifelse(J1 == "yes" | J2 == "yes" | J15 == "yes", "yes", "no")) 
-sup <- supplem |> 
-  mutate(gluc = if_else(suppltrt == "Gluconate de calcium", "yes", "no", missing = "no")) |>
-  dplyr::select(subjid, suppltrt, gluc) 
+#
+aa <- supplem |>
+  dplyr::select(subjid, starts_with("suppltrt")) |>
+  mutate(across(starts_with("suppltrt"),~ if_else(.x == "Gluconate de calcium", 1, 0, 0))) |>
+  rowwise() |>
+  mutate(glucca = sum(c_across(suppltrt:suppltrt6))) |>
+  dplyr::select(subjid, glucca) |>
+  group_by(subjid) |>
+  summarise(glucca = sum(glucca)) |> 
+  mutate(glucca = as.factor(if_else(glucca >0, "yes","no")))
+#
 zz <- zz |> 
-  left_join(sup, by = "subjid") |> 
-  mutate(hypog = as.factor(ifelse(hypocalc == "yes" |gluc == "yes", "yes", "no"))) |> 
-  dplyr::select(bras, hypocalc, gluc,hypog) 
-var_label(zz) = c("bras", "Ca corrigée < 1.9 mmol/L", "Gluconate de calcium IV", "Hypocalcémie sévère")
+  left_join(aa, by = "subjid") |> 
+  mutate(hypoglucca = ifelse(hypocalc == "yes" | glucca == "yes", "yes", "no")) 
+
+var_label(zz) = c("subjid","bras", "D1", "D2", "D15", "Ca corrigée < 1.9 mmol/L", "Gluconate de calcium IV", "severe hypocalcaemia")
+```
+
+```{r}
+#| label: tbl-hypoca
+#| tbl-cap: "Severity of hypocalcemia"
+
 zz |> 
+  dplyr::select(bras,hypocalc: hypoglucca) |>
  tbl_summary(by = "bras", 
               missing = "no") |> 
     add_overall() |>
   add_p(test = everything() ~ "fisher.test") |>
+  add_ci() |> 
   bold_p(t = 0.03) |>
   modify_header(label = " ") |>
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
@@ -855,6 +956,33 @@ zz |>
   pexptabph(exp = expx, nomfich = classeur , nomsheet =
   "hypoca", lg = TRUE)
 ```
+
+Il n'y a pas de différence significative entre les deux bras pour la
+survenue d'une hypocalcémie grave.
+
+```{r}
+#| label: tbl-hypocavis
+#| tbl-cap: "severe hypocalcaemia by visit"
+#| 
+zz |> 
+  dplyr::select(bras, J1:J15) |>
+  tbl_summary(by = "bras", 
+              missing = "no") |> 
+    add_overall() |> 
+    add_p(test = everything() ~ "fisher.test") |>
+  add_ci() |> 
+  bold_p(t = 0.03) |>
+  modify_header(label = " ") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  bold_labels() |> 
+  pexptabph(exp = expx, nomfich = classeur , nomsheet =
+  "hypocaj", lg = TRUE)
+  
+```
+
+Ce tableau reprend par visite la survenue d'une hypocalcalcémie \< 1,90
+mmol/L. Il n'y a pas de différence entre les deux bras sur les trois
+visites.
 
 ## Critère 3
 
@@ -871,14 +999,22 @@ zz <- visit |>
   dplyr::select(subjid, bras, jj, hypocalc)  |> 
   pivot_wider(names_from = jj, values_from = hypocalc) |> 
  mutate(duree = as.factor(ifelse(J01 == "yes" & J02 == "yes" & J15 == "yes", "15",
-                       ifelse(J01 == "yes" & J02 == "yes" & J15 == "no", "2",
-                              ifelse(J01 == "yes" & J02 == "no" & J15 == "no", "1",
+                       ifelse(J01 == "yes" & J02 == "yes" , "2",
+                              ifelse(J01 == "yes" , "1",
                                      ifelse(J01 == "no" & J02 == "no" & J15 == "no", "0", NA)))))) |> 
 mutate(duree = fct_relevel(duree,
     "0", "1", "2", "15")) |> 
   dplyr::select(bras, duree) 
+## Recodage de zz$duree en zz$duree_rec
+zz$duree <- zz$duree |>
+  fct_recode(
+    "no hypocalcaemia" = "0",
+    "1 day" = "1",
+    "2 days" = "2",
+    "15 days" = "15"
+  )
 
-var_label(zz) = c("bras", "Duration of symptoms of hypocalcaemia")
+var_label(zz) = c("bras", "Duration of symptoms of hypocalcaemia (days)")
 zz |>
   tbl_summary(by = "bras", 
               missing = "no") |> 
@@ -930,8 +1066,7 @@ zz |>
 
 *Recueil des pathologies à risque et mesure de la calcémie.*
 
-
-On distingue les indications de thyroïdectomie en : 
+On distingue les indications de thyroïdectomie en :
 
 - Nodule
 - Cancer
@@ -977,14 +1112,16 @@ zcac <-  bj01 |>
       dplyr::select(subjid, cac),
     by = c("subjid" )
   )
-names(zcac) <- c("subjid", "preop", "d1", "d2", "d15", "M3")
+names(zcac) <- c("subjid", "preop", "D1", "D2", "D15", "M3")
 zz <- aa |> 
   left_join(zcac, by = c("subjid")) |> 
-  pivot_longer(cols = c(preop, d1, d2, d15, M3), names_to = "Visite", values_to = "cacl") |> 
-  mutate(Visite = factor(Visite, levels = c("preop", "d1", "d2", "d15", "M3"))) 
+  pivot_longer(cols = c(preop, D1, D2, D15, M3), names_to = "Visite", values_to = "cacl") |> 
+  mutate(Visite = factor(Visite, levels = c("preop", "D1", "D2", "D15", "M3"))) 
 
 zz |> 
-  dplyr::select(! c(subjid, bras)) |>
+
+  dplyr::filter(Visite == "preop") |> 
+    dplyr::select(Diagnostic, bras) |>
   tbl_summary(by = "Diagnostic", 
               missing = "no") |> 
   modify_header(label = " ") |>
@@ -1007,7 +1144,11 @@ ll |>
   "regdiag", lg = FALSE)
 ```
 
-
+Sur un modèle mixte prenant en compte le diagnostic, la visite et le
+bras avec le sujet comme variable aléatoire, on ne retrouve pas de
+différence significative entre les deux bras pour la calcémie corrigée.
+Les différences constatées entre les deux bras pour les visites étaient
+prévisibles pour D1 & D2 mais surprenante pour M3.
 
 ## Critère 6
 
@@ -1018,20 +1159,26 @@ inférieure à 1.9 mmol/L ou l'existence de signes cliniques à trois mois.
 
 ```{r}
 #| label: tbl-hypodef
-#| tbl-cap: definitive hypocalcaemia
+#| tbl-cap: Definitive hypocalcaemia
 clin |> 
-  dplyr::select(Visite,hypocalc, hypocalcon, cacl) |> 
-  tbl_summary(by = Visite, 
+  dplyr::filter(Visite == "M3") |>
+  dplyr::select(hypocalc, hypocalcon, cacl, bras) |> 
+  tbl_summary(by = bras,
               missing = "no") |> 
   modify_header(label = " ") |>
+  add_p() |> 
+  bold_p(t = 0.03) |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
   bold_labels() |> 
   pexptabph(exp = expx, nomfich = classeur , nomsheet =
-  "sec-hypom3", lg = FALSE)
+  "hypodef", lg = TRUE)
 ```
 
 ## Critère 7
 
-*L’activité parathyroïdienne sera évaluée par la mesure de la PTH avant l’opération (J0-Chirurgie), à H4, J2 et J15. L’hypoparathyroïdie étant définie par la PTH < 15 ng/L.*
+*L’activité parathyroïdienne sera évaluée par la mesure de la PTH avant
+l’opération (J0-Chirurgie), à H4, J2 et J15. L’hypoparathyroïdie étant
+définie par la PTH \< 15 ng/L.*
 
 ```{r}
 #| label: tbl-pth
@@ -1072,10 +1219,6 @@ visiteJ01 |>
   pexptabph(exp = expx, nomfich = classeur , nomsheet = "pth", lg = TRUE)
 
 ```
-
-
-
-
 :::
 
 :::
