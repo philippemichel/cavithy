@@ -65,9 +65,9 @@ lcac <- "Corrected serum calcium (mmol/l)"
 cac <- function(df){
   df |> 
   mutate(cac =  calcium - 0.025 * (album - 40)) |> 
-  mutate(cacl = ifelse(cac < 2.0, "low","normal")) |> 
+  mutate(cacl = ifelse(cac < 2.0, "yes","no")) |> 
   mutate(cacl = as.factor(cacl))  |> 
-  mutate(hypocalc = ifelse(cacl == "low" | hypocalcon == "yes", "yes", "no")) |>   mutate(hypocalc = as.factor(hypocalc))
+  mutate(hypocalc = ifelse(cacl == "yes" | hypocalcon == "yes", "yes", "no")) |>   mutate(hypocalc = as.factor(hypocalc))
 }
 
 htabph <-
@@ -310,7 +310,7 @@ demog |>
   add_p(test = ptest) |>
   bold_p(t = 0.03) |>
   modify_header(label = "**Variable**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
 ```
@@ -372,7 +372,7 @@ bio1 |>
   add_p(test = ptest) |>
   bold_p(t = 0.03) |>
   modify_header(label = "**Variable**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "bio1", lg = TRUE)
@@ -397,7 +397,7 @@ add_overall(col_label = "**Overall**  (\nN = {style_number(N)})") |>
   add_p(test = ptest) |>
   bold_p(t = 0.03) |>
   modify_header(label = "**Variable**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet = "demog1", lg = TRUE)
 ```
@@ -422,7 +422,7 @@ op |>
   bold_p(t = 0.03) |>
   modify_header(all_stat_cols()~"**{level}** (N = {n})") |>
   modify_header(label = "**Signe**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |>
   htabph(exp = expx, nomfich = classeur , nomsheet =
               "techop", lg = TRUE)
@@ -439,10 +439,6 @@ op |>
 # en IT
 
 ## Signes cliniques ou biologiques d'hypocalcémie
-
-::: {.callout-note title = "Attention !"}
-Pour huit patients l'albuminémie n' pas été notée donc la calcémie corrigée n'est pas disponible. 
-:::
 
 
 *Le critère d’évaluation principal est la survenue d’une hypocalcémie
@@ -476,7 +472,8 @@ clin <- rbind(zz,zz1) |>
   rbind(zz2) |>
   rbind(zz15) |>
   rbind(zzm3) |> 
-  mutate(Visite = as.factor(Visite))
+  mutate(Visite = as.factor(Visite)) 
+
 
 var_label(clin) <-  c(
  "id","bras",
@@ -546,7 +543,7 @@ pp |>
   bold_p(t = 0.03) |>
   add_ci() |> 
   modify_header(label = "**Signe**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "clin12", lg = TRUE)
@@ -572,7 +569,7 @@ pp |>
   bold_p(t = 0.03) |>
   add_ci() |> 
   modify_header(label = " ") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "caj15", lg = TRUE)
@@ -637,7 +634,7 @@ pp |>
   bold_p(t = 0.03) |>
   add_ci() |> 
   modify_header(label = " ") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "cacj15", lg = TRUE)
@@ -839,7 +836,7 @@ var_label(zz$diff) <- "Différence calcémie corrigée J15 - préop"
 #   add_p(test = ptest) |>
 #   bold_p(t = 0.03) |>
 #   modify_header(label = "** **") |>
-#   modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+#   modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
 #   bold_labels() |> 
 #   htabph(exp = expx, nomfich = classeur , nomsheet =
 #   "bio1", lg = TRUE)
@@ -993,7 +990,7 @@ clin |>
   bold_p(t = 0.03) |>
   add_ci() |>
   modify_header(label = "**Signe clinique**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "clintot", lg = FALSE)
@@ -1004,10 +1001,10 @@ clin |>
 #| label: prepa-itm
 
 visit2 <- visit |> 
-  dplyr::filter(!(subjid %in%itm)) 
+  dplyr::filter(!(subjid %in%ittm)) 
 
 clinp2 <- clinp |> 
-  dplyr::filter(!(subjid %in%itm))
+  dplyr::filter(!(subjid %in%ittm))
 
 llc <- nrow(clinp2)/2
 
@@ -1039,7 +1036,7 @@ pp |>
   bold_p(t = 0.03) |>
   add_ci() |>
   modify_header(label = "**Signe**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "clin1", lg = TRUE)
@@ -1093,7 +1090,7 @@ significatif (`r pp1`).
 
 pp <- clinp3 |> 
   dplyr::filter(Visite == "J15") |> 
-  dplyr::select(!c(subjid,Visite)) 
+  dplyr::select(!c(subjid,Visite,Diagnostic)) 
 
 pp |> 
   tbl_summary(
@@ -1106,7 +1103,7 @@ pp |>
   bold_p(t = 0.03) |>
   add_ci() |> 
   modify_header(label = "**Signe**") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "clin1", lg = TRUE)
@@ -1115,21 +1112,6 @@ pp |>
 ```
 
 
-```{r}
-#| label: fig-clin2-perp
-#| fig-cap: Signes cliniques à J15 (Per protocol)
-#| eval : false
-
-# " à revoir"
-
-pp |> 
-  mutate(across(ends_with("on"), ~ as.numeric(.x)-1)) |> 
-  dplyr::select(!hypocalcon) |>
-  pivot_longer(cols = c(parestperibon:hypocalcauton), names_to = "signe", values_to = "n") |> 
-  ggplot(aes(x = signe, y = n, fill = bras)) +
-  geom_bar(stat = "identity", position = "dodge") 
-
-```
 
 
 
@@ -1169,7 +1151,7 @@ visiteJ01 |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
   modify_header(label = " ") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "dureehosp", lg = TRUE)
@@ -1284,7 +1266,7 @@ zz |>
   add_ci() |> 
   bold_p(t = 0.03) |>
   modify_header(label = " ") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "hypoca", lg = TRUE)
@@ -1305,7 +1287,7 @@ zz |>
   add_ci() |> 
   bold_p(t = 0.03) |>
   modify_header(label = " ") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "hypocaj", lg = TRUE)
@@ -1354,7 +1336,7 @@ zz |>
   add_p(test = everything() ~ "fisher.test") |>
   bold_p(t = 0.03) |>
   modify_header(label = "** **") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "duree", lg = TRUE)
@@ -1390,7 +1372,7 @@ zz |>
   add_p() |>
   bold_p(t = 0.03) |>
   modify_header(label = "** **") |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "vitd", lg = TRUE)
@@ -1508,7 +1490,7 @@ clin |>
   modify_header(label = " ") |>
   add_p() |> 
   bold_p(t = 0.03) |>
-  modify_spanning_header(c("stat_1", "stat_2") ~ "**Bras**") |>
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Arm**") |>
   bold_labels() |> 
   htabph(exp = expx, nomfich = classeur , nomsheet =
   "hypodef", lg = TRUE)

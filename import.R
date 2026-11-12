@@ -15,7 +15,6 @@ library(tidyr)
 library(stringr)
 library(forcats)
 #
-#
 # Macro import
 #
 nf <- c(
@@ -37,7 +36,7 @@ exclus <-
     "01052", "06097"
   )
 ittm <- as.factor(c(
-  "0100 7", "010 34", "010501", "030 81", "01 124", "0 1062"
+  "01007", "01034", "01050", "01051", "03081", "01124", "01062"
 ))
 
 perp <- as.factor(c(
@@ -140,7 +139,7 @@ visitem3 <- left_join(zz, visitem3, by = "subjid")
 rm(zz)
 #
 save(demog, atcd, bio1, supplem,
-  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3, itm, perp,
+  visiteJ01, visiteJ02, visiteJ1, visiteJ2, visiteJ15, visitem2, visitem3, ittm, perp,
   file = "datas/cavithy.RData"
 )
 load("datas/cavithy.RData")
